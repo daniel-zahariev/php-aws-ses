@@ -145,3 +145,6 @@ v.0.8.2.
  - Fully document the class methods with phpdoc tags
  - Build documentation with phpDocumentor
  - Move examples to files
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/daniel-zahariev/php-aws-ses/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
