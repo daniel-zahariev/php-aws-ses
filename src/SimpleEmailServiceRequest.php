@@ -10,6 +10,7 @@ final class SimpleEmailServiceRequest
 {
 	private $ses, $verb, $parameters = array();
 	public $response;
+	public static $curlOptions = array();
 
 	/**
 	* Constructor
@@ -17,6 +18,7 @@ final class SimpleEmailServiceRequest
 	* @param string $ses The SimpleEmailService object making this request
 	* @param string $action action
 	* @param string $verb HTTP verb
+	* @param array $curl_options Additional cURL options
 	* @return mixed
 	*/
 	function __construct($ses, $verb) {
@@ -117,6 +119,10 @@ final class SimpleEmailServiceRequest
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
 		curl_setopt($curl, CURLOPT_WRITEFUNCTION, array(&$this, '__responseWriteCallback'));
 		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+
+		foreach(self::$curlOptions as $option => $value) {
+			curl_setopt($curl, $option, $value);
+		}
 
 		// Execute, grab errors
 		if (curl_exec($curl)) {
