@@ -13,7 +13,9 @@ A bit of example code will be a good demonstration of how simple this class is t
 
 First, you’ll need to create a SimpleEmailService class object:
 
-    require_once('ses.php');
+    require_once('SimpleEmailService.php');
+    require_once('SimpleEmailServiceMessage.php');
+    require_once('SimpleEmailServiceRequest.php');
     $ses = new SimpleEmailService('Access Key Here', 'Secret Key Here');
 
 If this is your first time using Simple Email Service, you will need to request verification of at least one e-mail address, so you can send messages:
