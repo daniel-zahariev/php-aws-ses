@@ -16,16 +16,13 @@ final class SimpleEmailServiceRequest
 	* Constructor
 	*
 	* @param string $ses The SimpleEmailService object making this request
-	* @param string $action action
 	* @param string $verb HTTP verb
-	* @param array $curl_options Additional cURL options
-	* @return mixed
+	* @return void
 	*/
 	function __construct($ses, $verb) {
 		$this->ses = $ses;
 		$this->verb = $verb;
-		$this->response = new STDClass;
-		$this->response->error = false;
+		$this->response = (object) array('body' => '', 'code' => 0, 'error' => false);
 	}
 
 	/**
@@ -34,7 +31,7 @@ final class SimpleEmailServiceRequest
 	* @param string  $key Key
 	* @param string  $value Value
 	* @param boolean $replace Whether to replace the key if it already exists (default true)
-	* @return void
+	* @return SimpleEmailServiceRequest $this
 	*/
 	public function setParameter($key, $value, $replace = true) {
 		if(!$replace && isset($this->parameters[$key]))
@@ -47,6 +44,8 @@ final class SimpleEmailServiceRequest
 		{
 			$this->parameters[$key] = $value;
 		}
+
+		return $this;
 	}
 
 	/**
@@ -80,12 +79,12 @@ final class SimpleEmailServiceRequest
 		$query = implode('&', $params);
 
 		$headers = array();
-		$headers[] = 'Date: '.$date;
-		$headers[] = 'Host: '.$this->ses->getHost();
+		$headers[] = 'Date: ' . $date;
+		$headers[] = 'Host: ' . $this->ses->getHost();
 
 		$auth = 'AWS3-HTTPS AWSAccessKeyId='.$this->ses->getAccessKey();
 		$auth .= ',Algorithm=HmacSHA256,Signature='.$this->__getSignature($date);
-		$headers[] = 'X-Amzn-Authorization: '.$auth;
+		$headers[] = 'X-Amzn-Authorization: ' . $auth;
 
 		$url = 'https://'.$this->ses->getHost().'/';
 
@@ -139,7 +138,7 @@ final class SimpleEmailServiceRequest
 		@curl_close($curl);
 
 		// Parse body into XML
-		if ($this->response->error === false && isset($this->response->body)) {
+		if ($this->response->error === false && !empty($this->response->body)) {
 			$this->response->body = simplexml_load_string($this->response->body);
 
 			// Grab SES errors
@@ -165,8 +164,8 @@ final class SimpleEmailServiceRequest
 	/**
 	* CURL write callback
 	*
-	* @param resource &$curl CURL resource
-	* @param string &$data Data
+	* @param resource $curl CURL resource
+	* @param string $data Data
 	* @return integer
 	*/
 	private function __responseWriteCallback(&$curl, &$data) {

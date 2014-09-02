@@ -45,7 +45,7 @@
 * SimpleEmailService PHP class
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
-* @version 0.8.3
+* @version 0.8.4
 * @package AmazonSimpleEmailService
 */
 class SimpleEmailService
@@ -58,15 +58,14 @@ class SimpleEmailService
 	public function getSecretKey() { return $this->__secretKey; }
 	public function getHost() { return $this->__host; }
 
-	protected $__verifyHost = 1;
-	protected $__verifyPeer = 1;
+	protected $__verifyHost = true;
+	protected $__verifyPeer = true;
 
 	// verifyHost and verifyPeer determine whether curl verifies ssl certificates.
 	// It may be necessary to disable these checks on certain systems.
 	// These only have an effect if SSL is enabled.
 	public function verifyHost() { return $this->__verifyHost; }
 	public function enableVerifyHost($enable = true) { $this->__verifyHost = $enable; }
-
 	public function verifyPeer() { return $this->__verifyPeer; }
 	public function enableVerifyPeer($enable = true) { $this->__verifyPeer = $enable; }
 
@@ -75,6 +74,7 @@ class SimpleEmailService
 	*
 	* @param string $accessKey Access key
 	* @param string $secretKey Secret key
+	* @param string $host Amazon Host through which to send the emails
 	* @return void
 	*/
 	public function __construct($accessKey = null, $secretKey = null, $host = 'email.us-east-1.amazonaws.com') {
@@ -89,17 +89,19 @@ class SimpleEmailService
 	*
 	* @param string $accessKey Access key
 	* @param string $secretKey Secret key
-	* @return void
+	* @return SimpleEmailService $this
 	*/
 	public function setAuth($accessKey, $secretKey) {
 		$this->__accessKey = $accessKey;
 		$this->__secretKey = $secretKey;
+
+		return $this;
 	}
 
 	/**
 	* Lists the email addresses that have been verified and can be used as the 'From' address
 	*
-	* @return An array containing two items: a list of verified email addresses, and the request id.
+	* @return array An array containing two items: a list of verified email addresses, and the request id.
 	*/
 	public function listVerifiedEmailAddresses() {
 		$rest = new SimpleEmailServiceRequest($this, 'GET');
@@ -137,8 +139,8 @@ class SimpleEmailService
 	* After submitting this request, you should receive a verification email
 	* from Amazon at the specified address containing instructions to follow.
 	*
-	* @param string email The email address to get verified
-	* @return The request id for this request.
+	* @param string $email The email address to get verified
+	* @return array The request id for this request.
 	*/
 	public function verifyEmailAddress($email) {
 		$rest = new SimpleEmailServiceRequest($this, 'POST');
@@ -161,8 +163,8 @@ class SimpleEmailService
 	/**
 	* Removes the specified email address from the list of verified addresses.
 	*
-	* @param string email The email address to remove
-	* @return The request id for this request.
+	* @param string $email The email address to remove
+	* @return array The request id for this request.
 	*/
 	public function deleteVerifiedEmailAddress($email) {
 		$rest = new SimpleEmailServiceRequest($this, 'DELETE');
@@ -186,7 +188,7 @@ class SimpleEmailService
 	* Retrieves information on the current activity limits for this account.
 	* See http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendQuota.html
 	*
-	* @return An array containing information on this account's activity limits.
+	* @return array An array containing information on this account's activity limits.
 	*/
 	public function getSendQuota() {
 		$rest = new SimpleEmailServiceRequest($this, 'GET');
@@ -218,7 +220,7 @@ class SimpleEmailService
 	* Retrieves statistics for the last two weeks of activity on this account.
 	* See http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendStatistics.html
 	*
-	* @return An array of activity statistics.  Each array item covers a 15-minute period.
+	* @return array An array of activity statistics.  Each array item covers a 15-minute period.
 	*/
 	public function getSendStatistics() {
 		$rest = new SimpleEmailServiceRequest($this, 'GET');
@@ -260,17 +262,19 @@ class SimpleEmailService
 	/**
 	* Given a SimpleEmailServiceMessage object, submits the message to the service for sending.
 	*
-	* @return An array containing the unique identifier for this message and a separate request id.
+	* @param SimpleEmailServiceMessage $sesMessage An instance of the message class
+	* @param boolean $use_raw_request If this is true or there are attachments to the email `SendRawEmail` call will be used
+	* @return array An array containing the unique identifier for this message and a separate request id.
 	*         Returns false if the provided message is missing any required fields.
 	*/
-	public function sendEmail($sesMessage) {
+	public function sendEmail($sesMessage, $use_raw_request = false) {
 		if(!$sesMessage->validate()) {
 			$this->__triggerError('sendEmail', 'Message failed validation.');
 			return false;
 		}
 
 		$rest = new SimpleEmailServiceRequest($this, 'POST');
-		$action = empty($sesMessage->attachments) ? 'SendEmail' : 'SendRawEmail';
+		$action = !empty($sesMessage->attachments) || $use_raw_request ? 'SendRawEmail' : 'SendEmail';
 		$rest->setParameter('Action', $action);
 
 		if($action == 'SendRawEmail') {
@@ -278,14 +282,14 @@ class SimpleEmailService
 		} else {
 			$i = 1;
 			foreach($sesMessage->to as $to) {
-				$rest->setParameter('Destination.ToAddresses.member.'.$i, $to);
+				$rest->setParameter('Destination.ToAddresses.member.'.$i, $sesMessage->encodeRecipients($to));
 				$i++;
 			}
 
 			if(is_array($sesMessage->cc)) {
 				$i = 1;
 				foreach($sesMessage->cc as $cc) {
-					$rest->setParameter('Destination.CcAddresses.member.'.$i, $cc);
+					$rest->setParameter('Destination.CcAddresses.member.'.$i, $sesMessage->encodeRecipients($cc));
 					$i++;
 				}
 			}
@@ -293,7 +297,7 @@ class SimpleEmailService
 			if(is_array($sesMessage->bcc)) {
 				$i = 1;
 				foreach($sesMessage->bcc as $bcc) {
-					$rest->setParameter('Destination.BccAddresses.member.'.$i, $bcc);
+					$rest->setParameter('Destination.BccAddresses.member.'.$i, $sesMessage->encodeRecipients($bcc));
 					$i++;
 				}
 			}
@@ -301,12 +305,12 @@ class SimpleEmailService
 			if(is_array($sesMessage->replyto)) {
 				$i = 1;
 				foreach($sesMessage->replyto as $replyto) {
-					$rest->setParameter('ReplyToAddresses.member.'.$i, $replyto);
+					$rest->setParameter('ReplyToAddresses.member.'.$i, $sesMessage->encodeRecipients($replyto));
 					$i++;
 				}
 			}
 
-			$rest->setParameter('Source', $sesMessage->from);
+			$rest->setParameter('Source', $sesMessage->encodeRecipients($sesMessage->from));
 
 			if($sesMessage->returnpath != null) {
 				$rest->setParameter('ReturnPath', $sesMessage->returnpath);
@@ -352,9 +356,10 @@ class SimpleEmailService
 	/**
 	* Trigger an error message
 	*
-	* @internal Used by member functions to output errors
+	* {@internal Used by member functions to output errors}
+	* @param  string $functionname The name of the function that failed
 	* @param array $error Array containing error information
-	* @return string
+	* @return  void
 	*/
 	public function __triggerError($functionname, $error)
 	{

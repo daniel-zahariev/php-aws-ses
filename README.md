@@ -13,9 +13,7 @@ A bit of example code will be a good demonstration of how simple this class is t
 
 First, you’ll need to create a SimpleEmailService class object:
 
-    require_once('SimpleEmailService.php');
-    require_once('SimpleEmailServiceMessage.php');
-    require_once('SimpleEmailServiceRequest.php');
+    require_once('ses.php');
     $ses = new SimpleEmailService('Access Key Here', 'Secret Key Here');
 
 If this is your first time using Simple Email Service, you will need to request verification of at least one e-mail address, so you can send messages:
@@ -133,6 +131,13 @@ The `SendRawEmail` call is used automatically when there are attachments:
 
 
 ### Changelog
+v.0.8.4
+
+ - Added method `addCustomHeader` to class `SimpleEmailServiceMessage` for adding custom headers when the `SendRawEmail` call is used (#7)
+ - `SendRawEmail` method can be enforced with a new parameter of `sendEmail` function
+ - Recipients are now base64 encoded by default when the format is `Name <Email>` (#3)
+ - Most of the notices should be cleared now (#5)
+
 
 v.0.8.3
 
@@ -147,6 +152,5 @@ v.0.8.2.
  - Fully document the class methods with phpdoc tags
  - Build documentation with phpDocumentor
  - Move examples to files
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/daniel-zahariev/php-aws-ses/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
+ - Make a [Composer](https://packagist.org/) package
+ - Allow X-Headers usage

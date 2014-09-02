@@ -10,17 +10,18 @@ final class SimpleEmailServiceMessage {
 
 	// these are public for convenience only
 	// these are not to be used outside of the SimpleEmailService class!
-	public $to, $cc, $bcc, $replyto;
+	public $to, $cc, $bcc, $replyto, $recipientsCharset;
 	public $from, $returnpath;
 	public $subject, $messagetext, $messagehtml;
 	public $subjectCharset, $messageTextCharset, $messageHtmlCharset;
-	public $attachments = array();
+	public $attachments = array(), $customHeaders = array();
 
-	function __construct() {
+	public function __construct() {
 		$this->to = array();
 		$this->cc = array();
 		$this->bcc = array();
 		$this->replyto = array();
+		$this->recipientsCharset = 'UTF-8';
 
 		$this->from = null;
 		$this->returnpath = null;
@@ -29,75 +30,98 @@ final class SimpleEmailServiceMessage {
 		$this->messagetext = null;
 		$this->messagehtml = null;
 
-		$this->subjectCharset = null;
-		$this->messageTextCharset = null;
-		$this->messageHtmlCharset = null;
+		$this->subjectCharset = 'UTF-8';
+		$this->messageTextCharset = 'UTF-8';
+		$this->messageHtmlCharset = 'UTF-8';
 	}
-
 
 	/**
 	* addTo, addCC, addBCC, and addReplyTo have the following behavior:
 	* If a single address is passed, it is appended to the current list of addresses.
 	* If an array of addresses is passed, that array is merged into the current list.
 	*/
-	function addTo($to) {
+	public function addTo($to) {
 		if(!is_array($to)) {
 			$this->to[] = $to;
 		}
 		else {
-			$this->to = array_merge($this->to, $to);
+			$this->to = array_unique(array_merge($this->to, $to));
 		}
+
+		return $this;
 	}
 
-	function addCC($cc) {
+	public function addCC($cc) {
 		if(!is_array($cc)) {
 			$this->cc[] = $cc;
 		}
 		else {
 			$this->cc = array_merge($this->cc, $cc);
 		}
+
+		return $this;
 	}
 
-	function addBCC($bcc) {
+	public function addBCC($bcc) {
 		if(!is_array($bcc)) {
 			$this->bcc[] = $bcc;
 		}
 		else {
 			$this->bcc = array_merge($this->bcc, $bcc);
 		}
+
+		return $this;
 	}
 
-	function addReplyTo($replyto) {
+	public function addReplyTo($replyto) {
 		if(!is_array($replyto)) {
 			$this->replyto[] = $replyto;
 		}
 		else {
 			$this->replyto = array_merge($this->replyto, $replyto);
 		}
+
+		return $this;
 	}
 
-	function setFrom($from) {
+	public function setFrom($from) {
 		$this->from = $from;
+
+		return $this;
 	}
 
-	function setReturnPath($returnpath) {
+	public function setReturnPath($returnpath) {
 		$this->returnpath = $returnpath;
+
+		return $this;
 	}
 
-	function setSubject($subject) {
+	public function setRecipientsCharset($charset) {
+		$this->recipientsCharset = $charset;
+
+		return $this;
+	}
+
+	public function setSubject($subject) {
 		$this->subject = $subject;
+
+		return $this;
 	}
 
-	function setSubjectCharset($charset) {
+	public function setSubjectCharset($charset) {
 		$this->subjectCharset = $charset;
+
+		return $this;
 	}
 
-	function setMessageFromString($text, $html = null) {
+	public function setMessageFromString($text, $html = null) {
 		$this->messagetext = $text;
 		$this->messagehtml = $html;
+
+		return $this;
 	}
 
-	function setMessageFromFile($textfile, $htmlfile = null) {
+	public function setMessageFromFile($textfile, $htmlfile = null) {
 		if(file_exists($textfile) && is_file($textfile) && is_readable($textfile)) {
 			$this->messagetext = file_get_contents($textfile);
 		} else {
@@ -108,9 +132,11 @@ final class SimpleEmailServiceMessage {
 		} else {
 			$this->messagehtml = null;
 		}
+
+		return $this;
 	}
 
-	function setMessageFromURL($texturl, $htmlurl = null) {
+	public function setMessageFromURL($texturl, $htmlurl = null) {
 		if($texturl !== null) {
 			$this->messagetext = file_get_contents($texturl);
 		} else {
@@ -121,11 +147,28 @@ final class SimpleEmailServiceMessage {
 		} else {
 			$this->messagehtml = null;
 		}
+
+		return $this;
 	}
 
-	function setMessageCharset($textCharset, $htmlCharset = null) {
+	public function setMessageCharset($textCharset, $htmlCharset = null) {
 		$this->messageTextCharset = $textCharset;
 		$this->messageHtmlCharset = $htmlCharset;
+
+		return $this;
+	}
+
+	/**
+	 * Add custom header - this works only with SendRawEmail
+	 *
+	 * @param string $header Your custom header
+	 * @return SimpleEmailServiceMessage $this
+	 * @link( Restrictions on headers, http://docs.aws.amazon.com/ses/latest/DeveloperGuide/header-fields.html)
+	 */
+	public function addCustomHeader($header) {
+		$this->customHeaders[] = $header;
+
+		return $this;
 	}
 
 	/**
@@ -135,16 +178,17 @@ final class SimpleEmailServiceMessage {
 	 * @param string $data      The contents of the attachment file
 	 * @param string $mimeType  Specify custom MIME type
 	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
-	 * @return  void
-	 * @author Daniel Zahariev
+	 * @return SimpleEmailServiceMessage $this
 	 */
-	function addAttachmentFromData($name, $data, $mimeType = 'application/octet-stream', $contentId = null) {
+	public function addAttachmentFromData($name, $data, $mimeType = 'application/octet-stream', $contentId = null) {
 		$this->attachments[$name] = array(
 			'name' => $name,
 			'mimeType' => $mimeType,
 			'data' => $data,
 			'contentId' => $contentId,
 		);
+
+		return $this;
 	}
 
 	/**
@@ -155,9 +199,8 @@ final class SimpleEmailServiceMessage {
 	 * @param string $mimeType  Specify custom MIME type
 	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
 	 * @return  boolean Status of the operation
-	 * @author Daniel Zahariev
 	 */
-	function addAttachmentFromFile($name, $path, $mimeType = 'application/octet-stream', $contentId = null) {
+	public function addAttachmentFromFile($name, $path, $mimeType = 'application/octet-stream', $contentId = null) {
 		if (file_exists($path) && is_file($path) && is_readable($path)) {
 			$this->attachments[$name] = array(
 				'name' => $name,
@@ -174,27 +217,26 @@ final class SimpleEmailServiceMessage {
 	 * Get the raw mail message
 	 *
 	 * @return string
-	 * @author Daniel Zahariev
 	 */
-	function getRawMessage()
+	public function getRawMessage()
 	{
 		$boundary = uniqid(rand(), true);
-		$raw_message = "To: " . join(', ', $this->to) . "\n";
-		$raw_message .= "From: " . $this->from . "\n";
+		$raw_message = join("\n", $this->customHeaders) . "\n";
+		// $raw_message .= 'List-Unsubscribe: <mailto:unsubscribe-espc-tech-12345N@aeimedia.co.uk>, <http://aeimedia.co.uk/member/unsubscribe/?listname=espc-tech@aeimedia.co.uk?id=12345N>' . "\n";
+		$raw_message .= 'To: ' . $this->encodeRecipients($this->to) . "\n";
+		$raw_message .= 'From: ' . $this->encodeRecipients($this->from) . "\n";
+
 		if (!empty($this->cc)) {
-			$raw_message .= "CC: " . join(', ', $this->cc) . "\n";
+			$raw_message .= 'CC: ' . $this->encodeRecipients($this->cc) . "\n";
 		}
 		if (!empty($this->bcc)) {
-			$raw_message .= "BCC: " . join(', ', $this->bcc) . "\n";
+			$raw_message .= 'BCC: ' . $this->encodeRecipients($this->bcc) . "\n";
 		}
 
 		if($this->subject != null && strlen($this->subject) > 0) {
-			if(empty($this->subjectCharset)) {
-				$raw_message .= 'Subject: ' . $this->subject . "\n";
-			} else {
-				$raw_message .= 'Subject: =?' . $this->subjectCharset . '?B?' . base64_encode($this->subject) . '?=' . "\n";
-			}
+			$raw_message .= 'Subject: =?' . $this->subjectCharset . '?B?' . base64_encode($this->subject) . "?=\n";
 		}
+
 		$raw_message .= 'MIME-Version: 1.0' . "\n";
 		$raw_message .= 'Content-type: Multipart/Mixed; boundary="' . $boundary . '"' . "\n";
 		$raw_message .= "\n--{$boundary}\n";
@@ -228,6 +270,25 @@ final class SimpleEmailServiceMessage {
 
 		$raw_message .= "\n--{$boundary}--\n";
 		return base64_encode($raw_message);
+	}
+
+	/**
+	 * Encode recipient with the specified charset in `recipientsCharset`
+	 *
+	 * @param  string|array $recipient Single recipient or array of recipients
+	 * @return string            Encoded recipients joined with comma
+	 */
+	public function encodeRecipients($recipient)
+	{
+		if (is_array($recipient)) {
+			return join(', ', array_map(array($this, 'encodeRecipients'), $recipient));
+		}
+
+		if (preg_match("/(.*)<(.*)>/", $recipient, $regs)) {
+			$recipient = '=?' . $this->recipientsCharset . '?B?'.base64_encode($regs[1]).'?= <'.$regs[2].'>';
+		}
+
+		return $recipient;
 	}
 
 	/**
