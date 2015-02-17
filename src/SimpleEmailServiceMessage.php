@@ -2,7 +2,6 @@
 /**
 * SimpleEmailServiceMessage PHP class
 *
-* @link https://github.com/daniel-zahariev/php-aws-ses
 * @version 0.8.3
 * @package AmazonSimpleEmailService
 */
@@ -194,22 +193,37 @@ final class SimpleEmailServiceMessage {
 	/**
 	 * Add email attachment by passing file path
 	 *
-	 * @param string $name      The name of the file attachment as it will appear in the email
-	 * @param string $path      Path to the attachment file
-	 * @param string $mimeType  Specify custom MIME type
-	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
+	 * @param string $name              The name of the file attachment as it will appear in the email
+	 * @param string $path              Path to the attachment file
+	 * @param string $mimeType          Specify custom MIME type
+	 * @param string $contentId         Content ID of the attachment for inclusion in the mail message
+	 * @param string $attachmentType    Attachment type: attachment or inline
 	 * @return  boolean Status of the operation
 	 */
-	public function addAttachmentFromFile($name, $path, $mimeType = 'application/octet-stream', $contentId = null) {
+	public function addAttachmentFromFile($name, $path, $mimeType = 'application/octet-stream', $contentId = null, $attachmentType = 'attachment') {
 		if (file_exists($path) && is_file($path) && is_readable($path)) {
 			$this->attachments[$name] = array(
 				'name' => $name,
 				'mimeType' => $mimeType,
 				'data' => file_get_contents($path),
 				'contentId' => $contentId,
+				'attachmentType' => ($attachmentType == 'inline' ? 'inline; filename="' . $name . '"' : $attachmentType),
 			);
 			return true;
 		}
+		return false;
+	}
+
+	/**
+	 * Get the existence of attached inline messages
+	 *
+	 * @return boolean
+	 */
+
+	public function getInlineAttachmentsStatus() {
+		foreach($this->attachments as $attachment)
+			if($attachment['attachmentType'] != 'attachment')
+				return true;
 		return false;
 	}
 
@@ -238,7 +252,7 @@ final class SimpleEmailServiceMessage {
 		}
 
 		$raw_message .= 'MIME-Version: 1.0' . "\n";
-		$raw_message .= 'Content-type: Multipart/Mixed; boundary="' . $boundary . '"' . "\n";
+		$raw_message .= 'Content-type: ' . ($this->getInlineAttachmentsStatus() ? 'multipart/related' : 'Multipart/Mixed') . '; boundary="' . $boundary . '"' . "\n";
 		$raw_message .= "\n--{$boundary}\n";
 		$raw_message .= 'Content-type: Multipart/Alternative; boundary="alt-' . $boundary . '"' . "\n";
 
@@ -260,7 +274,7 @@ final class SimpleEmailServiceMessage {
 		foreach($this->attachments as $attachment) {
 			$raw_message .= "\n--{$boundary}\n";
 			$raw_message .= 'Content-Type: ' . $attachment['mimeType'] . '; name="' . $attachment['name'] . '"' . "\n";
-			$raw_message .= 'Content-Disposition: attachment' . "\n";
+			$raw_message .= 'Content-Disposition: ' . $attachment['attachmentType'] . "\n";
 			if(!empty($attachment['contentId'])) {
 				$raw_message .= 'Content-ID: ' . $attachment['contentId'] . '' . "\n";
 			}
