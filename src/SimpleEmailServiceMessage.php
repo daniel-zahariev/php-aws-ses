@@ -221,7 +221,7 @@ final class SimpleEmailServiceMessage {
 	public function getRawMessage()
 	{
 		$boundary = uniqid(rand(), true);
-		$raw_message = join("\n", $this->customHeaders) . "\n";
+		$raw_message = (count($this->customHeaders) > 0 ? join("\n", $this->customHeaders) . "\n" : '');
 		// $raw_message .= 'List-Unsubscribe: <mailto:unsubscribe-espc-tech-12345N@aeimedia.co.uk>, <http://aeimedia.co.uk/member/unsubscribe/?listname=espc-tech@aeimedia.co.uk?id=12345N>' . "\n";
 		$raw_message .= 'To: ' . $this->encodeRecipients($this->to) . "\n";
 		$raw_message .= 'From: ' . $this->encodeRecipients($this->from) . "\n";
