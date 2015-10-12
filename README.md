@@ -25,7 +25,7 @@ $m->setFrom('user@example.com');
 $m->setSubject('Hello, world!');
 $m->setMessageFromString('This is the message body.');
 
-$ses = new SimpleEmailService('Access Key Here', 'Secret Key Here')
+$ses = new SimpleEmailService('AccessKey', 'SecretKey')
 print_r($ses->sendEmail($m));
 
 // Successful response should print something similar to:
@@ -95,10 +95,22 @@ $m->addAttachmentFromFile('my_PFD_file.pdf', '/path/to/pdf/file', 'application/p
 
 // SendRawEmail is explicitly used when there are attachments:
 $ses->sendEmail($m);
+// Sending raw email can be enforsed with:
+$ses->sendEmail($m, $use_raw_request = true);
 
 // Now you can add an inline file in the message
 $m->addAttachmentFromFile('logo.png','path/to/logo.png','application/octet-stream', '<logo.png>' , 'inline');
 // and use it in the html version of the e-mail: <img src='cid:logo.png' />
+
+```
+
+### API Endpoints
+Few [Regions and Amazon SES endpoints](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html) are available and they can be used like this:
+
+```php
+<?php
+$region_endpoint = SimpleEmailService::AWS_US_EAST_1;
+$ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint);
 
 ```
 
@@ -121,16 +133,32 @@ $ses->getSendStatistics()
 ```
 See the documentation on [GetSendQuota](http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendQuota.html) and [GetSendStatistics](http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendStatistics.html) for more information on these calls.
 
+### Errors
+By default when Amazon SES API returns an error it will be triggered with [`trigger_error`](http://php.net/manual/en/function.trigger-error.php):
+
+```php
+<?php
+// Set the default behaviour for handling errors
+$trigger_error = true;
+$ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigger_error);
+
+// Or overwrite the main setting on a single call
+$use_raw_request = false;
+$trigger_error = false;
+$ses->sendEmail($m, $use_raw_request, $trigger_error);
+
+```
+
 
 ### Changelog
 v.0.8.5
 
-    - A few issues are fixed #9, #10, #10
-    - Pull request for Adding an inline file is merged
-    - Pull request for fixing a 'From: ' field error with Raw messages is merged
-    - Composer file added and submited to Packagist.org
-    - Triggering an error is now optional (on by default)
-    - Added class constants in `SimpleEmailService` for easy selection of region API endpoint
+ - A few issues are fixed #9, #10, #10
+ - Pull request for Adding an inline file is merged
+ - Pull request for fixing a 'From: ' field error with Raw messages is merged
+ - Composer file added and submited to Packagist.org
+ - Triggering an error is now optional (on by default)
+ - Added class constants in `SimpleEmailService` for easy selection of region API endpoint
 
 v.0.8.4
 
