@@ -5,6 +5,8 @@
     "homepage": "https://github.com/daniel-zahariev/php-aws-ses",
     "type": "library",
     "license": "BSD",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
     "authors": [
         {
             "name": "Daniel Zahariev",
