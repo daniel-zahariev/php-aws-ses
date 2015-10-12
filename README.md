@@ -10,7 +10,7 @@
 ### Installation
 Install the latest version with
 
-	composer require daniel-zahariev/php-aws-ses:dev-master
+	composer require daniel-zahariev/php-aws-ses
 
 ### Basic Usage
 
