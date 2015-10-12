@@ -1,7 +1,7 @@
 {
     "name": "daniel-zahariev/php-aws-ses",
-    "description": "Send emails via Amazon SES",
-    "keywords": ["simple","aws","ses","email"],
+    "description": "Send emails via Amazon Simple Email Service (SES) with REST-like interface",
+    "keywords": ["amazon", "email","aws","ses", "api", "rest"],
     "homepage": "https://github.com/daniel-zahariev/php-aws-ses",
     "type": "library",
     "license": "BSD",
