@@ -221,10 +221,12 @@ final class SimpleEmailServiceMessage {
 	public function getRawMessage()
 	{
 		$boundary = uniqid(rand(), true);
-		$raw_message = join("\n", $this->customHeaders) . "\n";
+		$custom_headers = join("\n", $this->customHeaders);
 		// $raw_message .= 'List-Unsubscribe: <mailto:unsubscribe-espc-tech-12345N@aeimedia.co.uk>, <http://aeimedia.co.uk/member/unsubscribe/?listname=espc-tech@aeimedia.co.uk?id=12345N>' . "\n";
-		$raw_message .= 'To: ' . $this->encodeRecipients($this->to) . "\n";
-		$raw_message .= 'From: ' . $this->encodeRecipients($this->from) . "\n";
+		$raw_message = empty($custom_headers) ? '' : $custom_headers . "\n";
+		$raw_message .= 'To:' . $this->encodeRecipients($this->to) . "\n";
+		$raw_message .= 'From:' . $this->encodeRecipients($this->from) . "\n";
+		if(!empty($this->replyto)) $raw_message .= 'Reply-To:' . $this->encodeRecipients($this->replyto) . "\n";
 
 		if (!empty($this->cc)) {
 			$raw_message .= 'CC: ' . $this->encodeRecipients($this->cc) . "\n";
@@ -269,13 +271,13 @@ final class SimpleEmailServiceMessage {
 		}
 
 		$raw_message .= "\n--{$boundary}--\n";
+
 		return base64_encode($raw_message);
 	}
 
 	/**
 	 * Encode recipient with the specified charset in `recipientsCharset`
 	 *
-	 * @param  string|array $recipient Single recipient or array of recipients
 	 * @return string            Encoded recipients joined with comma
 	 */
 	public function encodeRecipients($recipient)
