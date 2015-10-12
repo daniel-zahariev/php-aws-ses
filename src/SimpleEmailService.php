@@ -50,9 +50,17 @@
 */
 class SimpleEmailService
 {
+	/**
+	 * @link(AWS SES regions, http://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html)
+	 */
+	const AWS_US_EAST_1 = 'email.us-east-1.amazonaws.com';
+	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
+	const AWS_EU_WEST1 = 'email.eu-west-1.amazonaws.com';
+
 	protected $__accessKey; // AWS Access key
 	protected $__secretKey; // AWS Secret key
 	protected $__host;
+	protected $__trigger_errors;
 
 	public function getAccessKey() { return $this->__accessKey; }
 	public function getSecretKey() { return $this->__secretKey; }
@@ -75,13 +83,15 @@ class SimpleEmailService
 	* @param string $accessKey Access key
 	* @param string $secretKey Secret key
 	* @param string $host Amazon Host through which to send the emails
+	* @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
 	* @return void
 	*/
-	public function __construct($accessKey = null, $secretKey = null, $host = 'email.us-east-1.amazonaws.com') {
+	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true) {
 		if ($accessKey !== null && $secretKey !== null) {
 			$this->setAuth($accessKey, $secretKey);
 		}
 		$this->__host = $host;
+		$this->__trigger_errors = $trigger_errors;
 	}
 
 	/**
@@ -264,10 +274,12 @@ class SimpleEmailService
 	*
 	* @param SimpleEmailServiceMessage $sesMessage An instance of the message class
 	* @param boolean $use_raw_request If this is true or there are attachments to the email `SendRawEmail` call will be used
+	* @param boolean $trigger_error Optionally overwrite the class setting for triggering an error (with type check to true/false)
 	* @return array An array containing the unique identifier for this message and a separate request id.
 	*         Returns false if the provided message is missing any required fields.
+	*  @link(AWS SES Response formats, http://docs.aws.amazon.com/ses/latest/DeveloperGuide/query-interface-responses.html)
 	*/
-	public function sendEmail($sesMessage, $use_raw_request = false) {
+	public function sendEmail($sesMessage, $use_raw_request = false , $trigger_error = null) {
 		if(!$sesMessage->validate()) {
 			$this->__triggerError('sendEmail', 'Message failed validation.');
 			return false;
@@ -278,6 +290,7 @@ class SimpleEmailService
 		$rest->setParameter('Action', $action);
 
 		if($action == 'SendRawEmail') {
+			// echo $sesMessage->getRawMessage();return;
 			$rest->setParameter('RawMessage.Data', $sesMessage->getRawMessage());
 		} else {
 			$i = 1;
@@ -341,15 +354,24 @@ class SimpleEmailService
 
 		$rest = $rest->getResponse();
 		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+			$response = array(
+				'code' => $rest->code,
+				'error' => array('Error' => array('message' => 'Unexpected HTTP status')),
+			);
+			return $response;
 		}
 		if($rest->error !== false) {
-			$this->__triggerError('sendEmail', $rest->error);
-			return false;
+			if (($this->__trigger_errors && ($trigger_error !== false)) || $trigger_error === true) {
+				$this->__triggerError('sendEmail', $rest->error);
+				return false;
+			}
+			return $rest;
 		}
 
-		$response['MessageId'] = (string)$rest->body->SendEmailResult->MessageId;
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response = array(
+			'MessageId' => (string)$rest->body->{"{$action}Result"}->MessageId,
+			'RequestId' => (string)$rest->body->ResponseMetadata->RequestId,
+		);
 		return $response;
 	}
 
