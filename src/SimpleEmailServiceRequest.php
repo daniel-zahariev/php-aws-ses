@@ -169,12 +169,11 @@ final class SimpleEmailServiceRequest
 	* @return integer
 	*/
 	private function __responseWriteCallback(&$curl, &$data) {
-
-    if (!isset($this->response->body)) {
-		  $this->response->body = $data;
-    } else {
-		  $this->response->body .= $data;
-    }
+		if (!isset($this->response->body)) {
+			$this->response->body = $data;
+		} else {
+			$this->response->body .= $data;
+		}
 
 		return strlen($data);
 	}
