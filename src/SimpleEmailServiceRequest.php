@@ -3,7 +3,7 @@
 * SimpleEmailServiceRequest PHP class
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
-* @version 0.8.3
+* @version 0.8.5
 * @package AmazonSimpleEmailService
 */
 final class SimpleEmailServiceRequest
