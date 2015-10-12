@@ -1,0 +1,21 @@
+{
+    "name": "daniel-zahariev/php-aws-ses",
+    "description": "Send emails via Amazon SES",
+    "keywords": ["simple","aws","ses","email"],
+    "homepage": "https://github.com/daniel-zahariev/php-aws-ses",
+    "type": "library",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Daniel Zahariev",
+            "role": "developer"
+        }
+    ],
+    "autoload": {
+        "classmap": ["src/"]
+    },
+    "require": {
+        "php": ">=5.0.0",
+        "ext-curl": "*"
+    }
+}
