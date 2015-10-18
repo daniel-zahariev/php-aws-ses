@@ -17,7 +17,7 @@ Install the latest version with
 ```php
 <?php
 	
-requrie_once 'vendor/autoload.php';
+require_once 'vendor/autoload.php';
 
 $m = new SimpleEmailServiceMessage();
 $m->addTo('recipient@example.com');
