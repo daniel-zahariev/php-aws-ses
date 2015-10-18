@@ -131,7 +131,6 @@ final class SimpleEmailServiceRequest
 				'curl' => true,
 				'code' => curl_errno($curl),
 				'message' => curl_error($curl),
-				'resource' => $this->resource
 			);
 		}
 
