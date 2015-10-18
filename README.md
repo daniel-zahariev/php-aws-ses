@@ -151,6 +151,11 @@ $ses->sendEmail($m, $use_raw_request, $trigger_error);
 
 
 ### Changelog
+v.0.8.6
+
+- Removed dummy code
+- Removed version from source files
+
 v.0.8.5
 
  - A few issues are fixed #9, #10, #10
