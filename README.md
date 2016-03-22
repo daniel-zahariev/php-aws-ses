@@ -25,7 +25,7 @@ $m->setFrom('user@example.com');
 $m->setSubject('Hello, world!');
 $m->setMessageFromString('This is the message body.');
 
-$ses = new SimpleEmailService('AccessKey', 'SecretKey')
+$ses = new SimpleEmailService('AccessKey', 'SecretKey');
 print_r($ses->sendEmail($m));
 
 // Successful response should print something similar to:
