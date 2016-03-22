@@ -210,6 +210,25 @@ final class SimpleEmailServiceMessage {
 		return false;
 	}
 
+	/**
+	 * Add email attachment by passing file path
+	 *
+	 * @param string $name      The name of the file attachment as it will appear in the email
+	 * @param string $url      URL to the attachment file
+	 * @param string $mimeType  Specify custom MIME type
+	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
+	 * @param string $attachmentType    Attachment type: attachment or inline
+	 * @return  boolean Status of the operation
+	 */
+	public function addAttachmentFromUrl($name, $url, $mimeType = 'application/octet-stream', $contentId = null, $attachmentType = 'attachment') {
+		$data = file_get_contents($url);
+		if ($data !== false) {
+			$this->addAttachmentFromData($name, $data, $mimeType, $contentId, $attachmentType);
+			return true;
+		}
+		return false;
+	}
+
 
 	/**
 	 * Get the existence of attached inline messages
