@@ -7,6 +7,18 @@
 
 ****
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Basic Usage](#basic-usage)
+- [Recipients](#recipients)
+- [Message body](#message-body)
+- [Attachments](#attachments)
+- [Sending Bulk Messages](#sending-bulk-messages)
+- [API Endpoints](#api-endpoints)
+- [Helper Methods](#helper-methods)
+
+
 ### Installation
 Install the latest version with
 
@@ -16,7 +28,7 @@ Install the latest version with
 
 ```php
 <?php
-	
+
 require_once 'vendor/autoload.php';
 
 $m = new SimpleEmailServiceMessage();
@@ -75,7 +87,7 @@ $m->setMessageFromString($text, $html);
 $m->setMessageFromFile($textfilepath, $htmlfilepath);
 $m->setMessageFromURL($texturl, $htmlurl);
 
-// Remember that setMessageFromString, setMessageFromFile, and setMessageFromURL are mutually exclusive. 
+// Remember that setMessageFromString, setMessageFromFile, and setMessageFromURL are mutually exclusive.
 // If you call more than one, then whichever call you make last will be the message used.
 
 // You can also set the encoding of the Subject and the Message Body
@@ -104,20 +116,39 @@ $m->addAttachmentFromFile('logo.png','path/to/logo.png','application/octet-strea
 
 ```
 
+### Sending Bulk Messages
+When hundreds of emails have to be sent in bulk it's best to use the Bulk mode which essentially reuses a CURL handler and reduces the number of SSL handshakes and this gives a better performance.
+
+```php
+<?php
+
+// Enable bulk sending mode (reuse of CURL handler)
+$ses->setBulkMode(true);
+
+// Send the messages
+foreach($messages as $message) {
+	$ses->sendEmail($message);
+}
+
+// Disable bulk sending mode
+$ses->setBulkMode(false);
+```
+
 ### API Endpoints
 Few [Regions and Amazon SES endpoints](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html) are available and they can be used like this:
 
 ```php
 <?php
+
 $region_endpoint = SimpleEmailService::AWS_US_EAST_1;
 $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint);
-
 ```
 
 ### Helper Methods
 
 ```php
 <?php
+
 // Get the addresses that have been verified in your AWS SES account
 $ses->listVerifiedEmailAddresses();
 // Delete a verified address
@@ -138,6 +169,7 @@ By default when Amazon SES API returns an error it will be triggered with [`trig
 
 ```php
 <?php
+
 // Set the default behaviour for handling errors
 $trigger_error = true;
 $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigger_error);
@@ -151,6 +183,21 @@ $ses->sendEmail($m, $use_raw_request, $trigger_error);
 
 
 ### Changelog
+v.0.8.8
+
+- Issues fixed: #24, #25, #30, #31
+- added a method `setBulkMode` in `SimpleEmailService` which can enable reuse of `SimpleEmailServiceRequest` object for bulk sending of requests to AWS SES
+- new methods in `SimpleEmailService`: `getVerifyPeer`, `setVerifyPeer`, `getVerifyHost`, `setVerifyHost`, `getBulkMode`, `setBulkMode`, `getRequestHandler` (protected)
+- methods marked as deprecated in `SimpleEmailService`: `enableVerifyHost`, `enableVerifyPeer`, `verifyHost`, `verifyPeer`
+- new methods in `SimpleEmailServiceMessage`: `clearTo`, `clearCC`, `clearBCC`, `clearReplyTo`, `clearRecipients`
+- new methods in `SimpleEmailServiceRequest`: `setVerb`, `clearParameters`, `getCurlHandler` (protected)
+- updated `validate` method in `SimpleEmailServiceMessage`
+- added some phpDocumentor blocks
+
+v.0.8.7
+
+- Minor updates
+
 v.0.8.6
 
 - Removed dummy code
