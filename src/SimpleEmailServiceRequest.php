@@ -4,11 +4,19 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
+* @version v0.8.8
 */
 final class SimpleEmailServiceRequest
 {
 	private $ses, $verb, $parameters = array();
-	public $response;
+
+	// CURL request handler that can be reused
+	protected $curl_handler = null;
+
+	// Holds the response from calling AWS's API
+	protected $response;
+
+	//
 	public static $curlOptions = array();
 
 	/**
@@ -18,10 +26,20 @@ final class SimpleEmailServiceRequest
 	* @param string $verb HTTP verb
 	* @return void
 	*/
-	function __construct($ses, $verb) {
+	public function __construct($ses, $verb = 'GET') {
 		$this->ses = $ses;
 		$this->verb = $verb;
 		$this->response = (object) array('body' => '', 'code' => 0, 'error' => false);
+	}
+
+	/**
+	* Set HTTP method
+	*
+	* @return SimpleEmailServiceRequest $this
+	*/
+	public function setVerb($verb) {
+		$this->verb = $verb;
+		return $this;
 	}
 
 	/**
@@ -33,18 +51,76 @@ final class SimpleEmailServiceRequest
 	* @return SimpleEmailServiceRequest $this
 	*/
 	public function setParameter($key, $value, $replace = true) {
-		if(!$replace && isset($this->parameters[$key]))
-		{
+		if(!$replace && isset($this->parameters[$key])) {
 			$temp = (array)($this->parameters[$key]);
 			$temp[] = $value;
 			$this->parameters[$key] = $temp;
-		}
-		else
-		{
+		} else {
 			$this->parameters[$key] = $value;
 		}
 
 		return $this;
+	}
+
+	/**
+	* Get the params for the reques
+	*
+	* @return array $params
+	*/
+	public function getParametersEncoded() {
+		$params = array();
+
+		foreach ($this->parameters as $var => $value) {
+			if(is_array($value)) {
+				foreach($value as $v) {
+					$params[] = $var.'='.$this->__customUrlEncode($v);
+				}
+			} else {
+				$params[] = $var.'='.$this->__customUrlEncode($value);
+			}
+		}
+
+		sort($params, SORT_STRING);
+
+		return $params;
+	}
+
+	/**
+	* Clear the request parameters
+	* @return SimpleEmailServiceRequest $this
+	*/
+	public function clearParameters() {
+		$this->parameters = array();
+		return $this;
+	}
+
+	/**
+	* Instantiate and setup CURL handler for sending requests.
+	* Instance is cashed in `$this->curl_handler`
+	*
+	* @return resource $curl_handler
+	*/
+	protected function getCurlHandler() {
+		if (!empty($this->curl_handler))
+			return $this->curl_handler;
+
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_USERAGENT, 'SimpleEmailService/php');
+
+		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, ($this->ses->verifyHost() ? 2 : 0));
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, ($this->ses->verifyPeer() ? 1 : 0));
+		curl_setopt($curl, CURLOPT_HEADER, false);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
+		curl_setopt($curl, CURLOPT_WRITEFUNCTION, array(&$this, '__responseWriteCallback'));
+		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+
+		foreach(self::$curlOptions as $option => $value) {
+			curl_setopt($curl, $option, $value);
+		}
+
+		$this->curl_handler = $curl;
+
+		return $this->curl_handler;
 	}
 
 	/**
@@ -54,86 +130,51 @@ final class SimpleEmailServiceRequest
 	*/
 	public function getResponse() {
 
-		$params = array();
-		foreach ($this->parameters as $var => $value)
-		{
-			if(is_array($value))
-			{
-				foreach($value as $v)
-				{
-					$params[] = $var.'='.$this->__customUrlEncode($v);
-				}
-			}
-			else
-			{
-				$params[] = $var.'='.$this->__customUrlEncode($value);
-			}
-		}
-
-		sort($params, SORT_STRING);
-
 		// must be in format 'Sun, 06 Nov 1994 08:49:37 GMT'
 		$date = gmdate('D, d M Y H:i:s e');
-
-		$query = implode('&', $params);
+		$query = implode('&', $this->getParametersEncoded());
+		$auth = 'AWS3-HTTPS AWSAccessKeyId='.$this->ses->getAccessKey();
+		$auth .= ',Algorithm=HmacSHA256,Signature='.$this->__getSignature($date);
+		$url = 'https://'.$this->ses->getHost().'/';
 
 		$headers = array();
 		$headers[] = 'Date: ' . $date;
 		$headers[] = 'Host: ' . $this->ses->getHost();
-
-		$auth = 'AWS3-HTTPS AWSAccessKeyId='.$this->ses->getAccessKey();
-		$auth .= ',Algorithm=HmacSHA256,Signature='.$this->__getSignature($date);
 		$headers[] = 'X-Amzn-Authorization: ' . $auth;
 
-		$url = 'https://'.$this->ses->getHost().'/';
-
-		// Basic setup
-		$curl = curl_init();
-		curl_setopt($curl, CURLOPT_USERAGENT, 'SimpleEmailService/php');
-
-		curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, ($this->ses->verifyHost() ? 2 : 0));
-		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, ($this->ses->verifyPeer() ? 1 : 0));
+		$curl_handler = $this->getCurlHandler();
+		curl_setopt($curl_handler, CURLOPT_CUSTOMREQUEST, $this->verb);
 
 		// Request types
 		switch ($this->verb) {
 			case 'GET':
-				$url .= '?'.$query;
-				break;
-			case 'POST':
-				curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $this->verb);
-				curl_setopt($curl, CURLOPT_POSTFIELDS, $query);
-				$headers[] = 'Content-Type: application/x-www-form-urlencoded';
-			break;
 			case 'DELETE':
 				$url .= '?'.$query;
-				curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
-			break;
-			default: break;
-		}
-		curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-		curl_setopt($curl, CURLOPT_HEADER, false);
+				break;
 
-		curl_setopt($curl, CURLOPT_URL, $url);
-		curl_setopt($curl, CURLOPT_RETURNTRANSFER, false);
-		curl_setopt($curl, CURLOPT_WRITEFUNCTION, array(&$this, '__responseWriteCallback'));
-		curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-
-		foreach(self::$curlOptions as $option => $value) {
-			curl_setopt($curl, $option, $value);
+			case 'POST':
+				curl_setopt($curl_handler, CURLOPT_POSTFIELDS, $query);
+				$headers[] = 'Content-Type: application/x-www-form-urlencoded';
+				break;
 		}
+		curl_setopt($curl_handler, CURLOPT_HTTPHEADER, $headers);
+		curl_setopt($curl_handler, CURLOPT_URL, $url);
+
 
 		// Execute, grab errors
-		if (curl_exec($curl)) {
-			$this->response->code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		if (curl_exec($curl_handler)) {
+			$this->response->code = curl_getinfo($curl_handler, CURLINFO_HTTP_CODE);
 		} else {
 			$this->response->error = array(
 				'curl' => true,
-				'code' => curl_errno($curl),
-				'message' => curl_error($curl),
+				'code' => curl_errno($curl_handler),
+				'message' => curl_error($curl_handler),
 			);
 		}
 
-		@curl_close($curl);
+		// cleanup for reusing the current instance for multiple requests
+		curl_setopt($curl_handler, CURLOPT_POSTFIELDS, '');
+		$this->parameters = array();
 
 		// Parse body into XML
 		if ($this->response->error === false && !empty($this->response->body)) {
@@ -156,7 +197,18 @@ final class SimpleEmailServiceRequest
 			}
 		}
 
-		return $this->response;
+		$response = $this->response;
+		$this->response = (object) array('body' => '', 'code' => 0, 'error' => false);
+
+		return $response;
+	}
+
+	/**
+	* Destroy any leftover handlers
+	*/
+	public function __destruct() {
+		if (!empty($this->curl_handler))
+			@curl_close($this->curl_handler);
 	}
 
 	/**

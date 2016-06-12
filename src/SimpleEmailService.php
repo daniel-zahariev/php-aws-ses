@@ -46,6 +46,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
+* @version v0.8.8
 */
 class SimpleEmailService
 {
@@ -56,25 +57,29 @@ class SimpleEmailService
 	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
 	const AWS_EU_WEST1 = 'email.eu-west-1.amazonaws.com';
 
-	protected $__accessKey; // AWS Access key
-	protected $__secretKey; // AWS Secret key
+	// AWS SES Target host of region
 	protected $__host;
+
+	// AWS SES Access key
+	protected $__accessKey;
+
+	// AWS Secret key
+	protected $__secretKey;
+
+	// Enable/disable
 	protected $__trigger_errors;
 
-	public function getAccessKey() { return $this->__accessKey; }
-	public function getSecretKey() { return $this->__secretKey; }
-	public function getHost() { return $this->__host; }
+	// Controls the reuse of CURL hander for sending a bulk of messages
+	protected $__bulk_sending_mode = false;
 
+	// Optionally reusable SimpleEmailServiceRequest instance
+	protected $__ses_request = null;
+
+	// Controls CURLOPT_SSL_VERIFYHOST setting for SimpleEmailServiceRequest's curl handler
 	protected $__verifyHost = true;
-	protected $__verifyPeer = true;
 
-	// verifyHost and verifyPeer determine whether curl verifies ssl certificates.
-	// It may be necessary to disable these checks on certain systems.
-	// These only have an effect if SSL is enabled.
-	public function verifyHost() { return $this->__verifyHost; }
-	public function enableVerifyHost($enable = true) { $this->__verifyHost = $enable; }
-	public function verifyPeer() { return $this->__verifyPeer; }
-	public function enableVerifyPeer($enable = true) { $this->__verifyPeer = $enable; }
+	// Controls CURLOPT_SSL_VERIFYPEER setting for SimpleEmailServiceRequest's curl handler
+	protected $__verifyPeer = true;
 
 	/**
 	* Constructor
@@ -107,36 +112,124 @@ class SimpleEmailService
 		return $this;
 	}
 
+	// DEPRECATED
+	public function enableVerifyHost($enable = true) { $this->__verifyHost = (bool)$enable; return $this; }
+	// DEPRECATED
+	public function enableVerifyPeer($enable = true) { $this->__verifyPeer = (bool)$enable; return $this; }
+	// DEPRECATED
+	public function verifyHost() { return $this->__verifyHost; }
+	// DEPRECATED
+	public function verifyPeer() { return $this->__verifyPeer; }
+
+
+	/**
+	* Get AWS target host
+	* @return boolean
+	*/
+	public function getHost() { return $this->__host; }
+
+	/**
+	* Get AWS SES auth access key
+	* @return string
+	*/
+	public function getAccessKey() { return $this->__accessKey; }
+
+	/**
+	* Get AWS SES auth secret key
+	* @return string
+	*/
+	public function getSecretKey() { return $this->__secretKey; }
+
+	/**
+	* Get the verify peer CURL mode
+	* @return boolean
+	*/
+	public function getVerifyPeer() { return $this->__verifyPeer; }
+
+	/**
+	* Get the verify host CURL mode
+	* @return boolean
+	*/
+	public function getVerifyHost() { return $this->__verifyHost; }
+
+	/**
+	* Get bulk email sending mode
+	* @return boolean
+	*/
+	public function getBulkMode() { return $this->__bulk_sending_mode; }
+
+
+	/**
+	* Enable/disable CURLOPT_SSL_VERIFYHOST for SimpleEmailServiceRequest's curl handler
+	* verifyHost and verifyPeer determine whether curl verifies ssl certificates.
+	* It may be necessary to disable these checks on certain systems.
+	* These only have an effect if SSL is enabled.
+	*
+	* @param boolean $enable New status for the mode
+	* @return SimpleEmailService $this
+	*/
+	public function setVerifyHost($enable = true) {
+		$this->__verifyHost = (bool)$enable;
+		return $this;
+	}
+
+	/**
+	* Enable/disable CURLOPT_SSL_VERIFYPEER for SimpleEmailServiceRequest's curl handler
+	* verifyHost and verifyPeer determine whether curl verifies ssl certificates.
+	* It may be necessary to disable these checks on certain systems.
+	* These only have an effect if SSL is enabled.
+	*
+	* @param boolean $enable New status for the mode
+	* @return SimpleEmailService $this
+	*/
+	public function setVerifyPeer($enable = true) {
+		$this->__verifyPeer = (bool)$enable;
+		return $this;
+	}
+
+	/**
+	* Enable/disable bulk email sending mode
+	*
+	* @param boolean $enable New status for the mode
+	* @return SimpleEmailService $this
+	*/
+	public function setBulkMode($enable = true) {
+		$this->__bulk_sending_mode = (bool)$enable;
+		// clear request handler on disable
+		if (!$enable) $this->__ses_request = null;
+		return $this;
+	}
+
 	/**
 	* Lists the email addresses that have been verified and can be used as the 'From' address
 	*
 	* @return array An array containing two items: a list of verified email addresses, and the request id.
 	*/
 	public function listVerifiedEmailAddresses() {
-		$rest = new SimpleEmailServiceRequest($this, 'GET');
-		$rest->setParameter('Action', 'ListVerifiedEmailAddresses');
+		$ses_request = $this->getRequestHandler('GET');
+		$ses_request->setParameter('Action', 'ListVerifiedEmailAddresses');
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
 		}
-		if($rest->error !== false) {
-			$this->__triggerError('listVerifiedEmailAddresses', $rest->error);
+		if($ses_response->error !== false) {
+			$this->__triggerError('listVerifiedEmailAddresses', $ses_response->error);
 			return false;
 		}
 
 		$response = array();
-		if(!isset($rest->body)) {
+		if(!isset($ses_response->body)) {
 			return $response;
 		}
 
 		$addresses = array();
-		foreach($rest->body->ListVerifiedEmailAddressesResult->VerifiedEmailAddresses->member as $address) {
+		foreach($ses_response->body->ListVerifiedEmailAddressesResult->VerifiedEmailAddresses->member as $address) {
 			$addresses[] = (string)$address;
 		}
 
 		$response['Addresses'] = $addresses;
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 
 		return $response;
 	}
@@ -152,20 +245,20 @@ class SimpleEmailService
 	* @return array The request id for this request.
 	*/
 	public function verifyEmailAddress($email) {
-		$rest = new SimpleEmailServiceRequest($this, 'POST');
-		$rest->setParameter('Action', 'VerifyEmailAddress');
-		$rest->setParameter('EmailAddress', $email);
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'VerifyEmailAddress');
+		$ses_request->setParameter('EmailAddress', $email);
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
 		}
-		if($rest->error !== false) {
-			$this->__triggerError('verifyEmailAddress', $rest->error);
+		if($ses_response->error !== false) {
+			$this->__triggerError('verifyEmailAddress', $ses_response->error);
 			return false;
 		}
 
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 		return $response;
 	}
 
@@ -176,20 +269,20 @@ class SimpleEmailService
 	* @return array The request id for this request.
 	*/
 	public function deleteVerifiedEmailAddress($email) {
-		$rest = new SimpleEmailServiceRequest($this, 'DELETE');
-		$rest->setParameter('Action', 'DeleteVerifiedEmailAddress');
-		$rest->setParameter('EmailAddress', $email);
+		$ses_request = $this->getRequestHandler('DELETE');
+		$ses_request->setParameter('Action', 'DeleteVerifiedEmailAddress');
+		$ses_request->setParameter('EmailAddress', $email);
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
 		}
-		if($rest->error !== false) {
-			$this->__triggerError('deleteVerifiedEmailAddress', $rest->error);
+		if($ses_response->error !== false) {
+			$this->__triggerError('deleteVerifiedEmailAddress', $ses_response->error);
 			return false;
 		}
 
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 		return $response;
 	}
 
@@ -200,27 +293,27 @@ class SimpleEmailService
 	* @return array An array containing information on this account's activity limits.
 	*/
 	public function getSendQuota() {
-		$rest = new SimpleEmailServiceRequest($this, 'GET');
-		$rest->setParameter('Action', 'GetSendQuota');
+		$ses_request = $this->getRequestHandler('GET');
+		$ses_request->setParameter('Action', 'GetSendQuota');
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
 		}
-		if($rest->error !== false) {
-			$this->__triggerError('getSendQuota', $rest->error);
+		if($ses_response->error !== false) {
+			$this->__triggerError('getSendQuota', $ses_response->error);
 			return false;
 		}
 
 		$response = array();
-		if(!isset($rest->body)) {
+		if(!isset($ses_response->body)) {
 			return $response;
 		}
 
-		$response['Max24HourSend'] = (string)$rest->body->GetSendQuotaResult->Max24HourSend;
-		$response['MaxSendRate'] = (string)$rest->body->GetSendQuotaResult->MaxSendRate;
-		$response['SentLast24Hours'] = (string)$rest->body->GetSendQuotaResult->SentLast24Hours;
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response['Max24HourSend'] = (string)$ses_response->body->GetSendQuotaResult->Max24HourSend;
+		$response['MaxSendRate'] = (string)$ses_response->body->GetSendQuotaResult->MaxSendRate;
+		$response['SentLast24Hours'] = (string)$ses_response->body->GetSendQuotaResult->SentLast24Hours;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 
 		return $response;
 	}
@@ -232,25 +325,25 @@ class SimpleEmailService
 	* @return array An array of activity statistics.  Each array item covers a 15-minute period.
 	*/
 	public function getSendStatistics() {
-		$rest = new SimpleEmailServiceRequest($this, 'GET');
-		$rest->setParameter('Action', 'GetSendStatistics');
+		$ses_request = $this->getRequestHandler('GET');
+		$ses_request->setParameter('Action', 'GetSendStatistics');
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
-			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
 		}
-		if($rest->error !== false) {
-			$this->__triggerError('getSendStatistics', $rest->error);
+		if($ses_response->error !== false) {
+			$this->__triggerError('getSendStatistics', $ses_response->error);
 			return false;
 		}
 
 		$response = array();
-		if(!isset($rest->body)) {
+		if(!isset($ses_response->body)) {
 			return $response;
 		}
 
 		$datapoints = array();
-		foreach($rest->body->GetSendStatisticsResult->SendDataPoints->member as $datapoint) {
+		foreach($ses_response->body->GetSendStatisticsResult->SendDataPoints->member as $datapoint) {
 			$p = array();
 			$p['Bounces'] = (string)$datapoint->Bounces;
 			$p['Complaints'] = (string)$datapoint->Complaints;
@@ -262,7 +355,7 @@ class SimpleEmailService
 		}
 
 		$response['SendDataPoints'] = $datapoints;
-		$response['RequestId'] = (string)$rest->body->ResponseMetadata->RequestId;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 
 		return $response;
 	}
@@ -284,24 +377,24 @@ class SimpleEmailService
 			return false;
 		}
 
-		$rest = new SimpleEmailServiceRequest($this, 'POST');
+		$ses_request = $this->getRequestHandler('POST');
 		$action = !empty($sesMessage->attachments) || $use_raw_request ? 'SendRawEmail' : 'SendEmail';
-		$rest->setParameter('Action', $action);
+		$ses_request->setParameter('Action', $action);
 
 		if($action == 'SendRawEmail') {
 			// echo $sesMessage->getRawMessage();return;
-			$rest->setParameter('RawMessage.Data', $sesMessage->getRawMessage());
+			$ses_request->setParameter('RawMessage.Data', $sesMessage->getRawMessage());
 		} else {
 			$i = 1;
 			foreach($sesMessage->to as $to) {
-				$rest->setParameter('Destination.ToAddresses.member.'.$i, $sesMessage->encodeRecipients($to));
+				$ses_request->setParameter('Destination.ToAddresses.member.'.$i, $sesMessage->encodeRecipients($to));
 				$i++;
 			}
 
 			if(is_array($sesMessage->cc)) {
 				$i = 1;
 				foreach($sesMessage->cc as $cc) {
-					$rest->setParameter('Destination.CcAddresses.member.'.$i, $sesMessage->encodeRecipients($cc));
+					$ses_request->setParameter('Destination.CcAddresses.member.'.$i, $sesMessage->encodeRecipients($cc));
 					$i++;
 				}
 			}
@@ -309,7 +402,7 @@ class SimpleEmailService
 			if(is_array($sesMessage->bcc)) {
 				$i = 1;
 				foreach($sesMessage->bcc as $bcc) {
-					$rest->setParameter('Destination.BccAddresses.member.'.$i, $sesMessage->encodeRecipients($bcc));
+					$ses_request->setParameter('Destination.BccAddresses.member.'.$i, $sesMessage->encodeRecipients($bcc));
 					$i++;
 				}
 			}
@@ -317,59 +410,59 @@ class SimpleEmailService
 			if(is_array($sesMessage->replyto)) {
 				$i = 1;
 				foreach($sesMessage->replyto as $replyto) {
-					$rest->setParameter('ReplyToAddresses.member.'.$i, $sesMessage->encodeRecipients($replyto));
+					$ses_request->setParameter('ReplyToAddresses.member.'.$i, $sesMessage->encodeRecipients($replyto));
 					$i++;
 				}
 			}
 
-			$rest->setParameter('Source', $sesMessage->encodeRecipients($sesMessage->from));
+			$ses_request->setParameter('Source', $sesMessage->encodeRecipients($sesMessage->from));
 
 			if($sesMessage->returnpath != null) {
-				$rest->setParameter('ReturnPath', $sesMessage->returnpath);
+				$ses_request->setParameter('ReturnPath', $sesMessage->returnpath);
 			}
 
 			if($sesMessage->subject != null && strlen($sesMessage->subject) > 0) {
-				$rest->setParameter('Message.Subject.Data', $sesMessage->subject);
+				$ses_request->setParameter('Message.Subject.Data', $sesMessage->subject);
 				if($sesMessage->subjectCharset != null && strlen($sesMessage->subjectCharset) > 0) {
-					$rest->setParameter('Message.Subject.Charset', $sesMessage->subjectCharset);
+					$ses_request->setParameter('Message.Subject.Charset', $sesMessage->subjectCharset);
 				}
 			}
 
 
 			if($sesMessage->messagetext != null && strlen($sesMessage->messagetext) > 0) {
-				$rest->setParameter('Message.Body.Text.Data', $sesMessage->messagetext);
+				$ses_request->setParameter('Message.Body.Text.Data', $sesMessage->messagetext);
 				if($sesMessage->messageTextCharset != null && strlen($sesMessage->messageTextCharset) > 0) {
-					$rest->setParameter('Message.Body.Text.Charset', $sesMessage->messageTextCharset);
+					$ses_request->setParameter('Message.Body.Text.Charset', $sesMessage->messageTextCharset);
 				}
 			}
 
 			if($sesMessage->messagehtml != null && strlen($sesMessage->messagehtml) > 0) {
-				$rest->setParameter('Message.Body.Html.Data', $sesMessage->messagehtml);
+				$ses_request->setParameter('Message.Body.Html.Data', $sesMessage->messagehtml);
 				if($sesMessage->messageHtmlCharset != null && strlen($sesMessage->messageHtmlCharset) > 0) {
-					$rest->setParameter('Message.Body.Html.Charset', $sesMessage->messageHtmlCharset);
+					$ses_request->setParameter('Message.Body.Html.Charset', $sesMessage->messageHtmlCharset);
 				}
 			}
 		}
 
-		$rest = $rest->getResponse();
-		if($rest->error === false && $rest->code !== 200) {
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
 			$response = array(
-				'code' => $rest->code,
+				'code' => $ses_response->code,
 				'error' => array('Error' => array('message' => 'Unexpected HTTP status')),
 			);
 			return $response;
 		}
-		if($rest->error !== false) {
+		if($ses_response->error !== false) {
 			if (($this->__trigger_errors && ($trigger_error !== false)) || $trigger_error === true) {
-				$this->__triggerError('sendEmail', $rest->error);
+				$this->__triggerError('sendEmail', $ses_response->error);
 				return false;
 			}
-			return $rest;
+			return $ses_response;
 		}
 
 		$response = array(
-			'MessageId' => (string)$rest->body->{"{$action}Result"}->MessageId,
-			'RequestId' => (string)$rest->body->ResponseMetadata->RequestId,
+			'MessageId' => (string)$ses_response->body->{"{$action}Result"}->MessageId,
+			'RequestId' => (string)$ses_response->body->ResponseMetadata->RequestId,
 		);
 		return $response;
 	}
@@ -400,5 +493,18 @@ class SimpleEmailService
 		else {
 			trigger_error(sprintf("SimpleEmailService::%s(): Encountered an error: %s", $functionname, $error), E_USER_WARNING);
 		}
+	}
+
+	/**
+	*
+	*/
+	protected function getRequestHandler($verb) {
+		if ($this->__bulk_sending_mode && !empty($this->__ses_request)) {
+			$this->__ses_request->setVerb($verb);
+			return $this->__ses_request;
+		}
+		$this->__ses_request = new SimpleEmailServiceRequest($this, $verb);
+
+		return $this->__ses_request;
 	}
 }
