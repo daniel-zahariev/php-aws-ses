@@ -22,7 +22,7 @@ final class SimpleEmailServiceRequest
 	/**
 	* Constructor
 	*
-	* @param string $ses The SimpleEmailService object making this request
+	* @param SimpleEmailService $ses The SimpleEmailService object making this request
 	* @param string $verb HTTP verb
 	* @return void
 	*/
@@ -244,7 +244,7 @@ final class SimpleEmailServiceRequest
 	/**
 	* Generate the auth string using Hmac-SHA256
 	*
-	* @internal Used by SimpleDBRequest::getResponse()
+	* @internal Used by SimpleEmailServiceRequest::getResponse()
 	* @param string $string String to sign
 	* @return string
 	*/
