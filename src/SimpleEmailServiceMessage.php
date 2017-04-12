@@ -266,7 +266,7 @@ final class SimpleEmailServiceMessage {
 	 * @param string $mimeType  Specify custom MIME type
 	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
 	 * @param string $attachmentType    Attachment type: attachment or inline
-	 * @return  boolean Status of the operation
+	 * @return boolean Status of the operation
 	 */
 	public function addAttachmentFromFile($name, $path, $mimeType = 'application/octet-stream', $contentId = null, $attachmentType = 'attachment') {
 		if (file_exists($path) && is_file($path) && is_readable($path)) {
@@ -284,7 +284,7 @@ final class SimpleEmailServiceMessage {
 	 * @param string $mimeType  Specify custom MIME type
 	 * @param string $contentId Content ID of the attachment for inclusion in the mail message
 	 * @param string $attachmentType    Attachment type: attachment or inline
-	 * @return  boolean Status of the operation
+	 * @return boolean Status of the operation
 	 */
 	public function addAttachmentFromUrl($name, $url, $mimeType = 'application/octet-stream', $contentId = null, $attachmentType = 'attachment') {
 		$data = file_get_contents($url);
@@ -318,8 +318,8 @@ final class SimpleEmailServiceMessage {
 	public function getRawMessage()
 	{
 		$boundary = uniqid(rand(), true);
-		$raw_message = (count($this->customHeaders) > 0 ? join("\n", $this->customHeaders) . "\n" : '');
-		$raw_message .= 'To:' . $this->encodeRecipients($this->to) . "\n";
+		$raw_message = count($this->customHeaders) > 0 ? join("\n", $this->customHeaders) . "\n" : '';
+		$raw_message .= count($this->to) > 0 ? 'To:' . $this->encodeRecipients($this->to) . "\n" : '';
 		$raw_message .= 'From:' . $this->encodeRecipients($this->from) . "\n";
 		if(!empty($this->replyto)) $raw_message .= 'Reply-To:' . $this->encodeRecipients($this->replyto) . "\n";
 
@@ -373,7 +373,7 @@ final class SimpleEmailServiceMessage {
 	/**
 	 * Encode recipient with the specified charset in `recipientsCharset`
 	 *
-	 * @return string            Encoded recipients joined with comma
+	 * @return string Encoded recipients joined with comma
 	 */
 	public function encodeRecipients($recipient)
 	{
@@ -390,6 +390,7 @@ final class SimpleEmailServiceMessage {
 
 	/**
 	* Validates whether the message object has sufficient information to submit a request to SES.
+	*
 	* This does not guarantee the message will arrive, nor that the request will succeed;
 	* instead, it makes sure that no required fields are missing.
 	*
@@ -401,16 +402,16 @@ final class SimpleEmailServiceMessage {
 	* @return boolean
 	*/
 	public function validate() {
-		// at least one To: destination is required
-		if(count($this->to) == 0)
+		// at least one destination is required
+		if (count($this->to) == 0 && count($this->cc) == 0 && count($this->bcc) == 0)
 			return false;
 
 		// sender is required
-		if($this->from == null || strlen($this->from) == 0)
+		if ($this->from == null || strlen($this->from) == 0)
 			return false;
 
 		// subject is required
-		if(($this->subject == null || strlen($this->subject) == 0)) return false;
+		if (($this->subject == null || strlen($this->subject) == 0)) return false;
 
 		// message is required
 		if ((empty($this->messagetext) || strlen((string)$this->messagetext) == 0)
