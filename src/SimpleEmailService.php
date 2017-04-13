@@ -46,7 +46,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.8.8
+* @version v0.8.9
 */
 class SimpleEmailService
 {
@@ -382,7 +382,6 @@ class SimpleEmailService
 		$ses_request->setParameter('Action', $action);
 
 		if($action == 'SendRawEmail') {
-			// echo $sesMessage->getRawMessage();return;
 			$ses_request->setParameter('RawMessage.Data', $sesMessage->getRawMessage());
 		} else {
 			$i = 1;
