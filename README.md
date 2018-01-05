@@ -116,6 +116,38 @@ $m->addAttachmentFromFile('logo.png','path/to/logo.png','application/octet-strea
 
 ```
 
+### Configuration Set and Message Tags
+```php
+<?php
+
+// Set the configuration set
+$m->setConfigurationSet('myConfigurationSet');
+
+// Reset the configuration set
+$m->setConfigurationSet(null);
+
+
+// Set message tag
+$m->setMessageTag('key', 'value');
+
+// Get message tag
+$tag = $m->getMessageTag('key');
+
+// Remove message tag
+$m->removeMessageTag('key');
+
+// Set message tags in bulk - performs merge with current tags
+$m->setMessageTags(array('key1' => 'value1', 'key2' => 'value2'));
+
+// Get message tags
+$tags = $m->getMessageTags();
+
+// Remove all message tags
+$m->removeMessageTags();
+
+```
+
+
 ### Sending Bulk Messages
 When hundreds of emails have to be sent in bulk it's best to use the Bulk mode which essentially reuses a CURL handler and reduces the number of SSL handshakes and this gives a better performance.
 
@@ -183,6 +215,16 @@ $ses->sendEmail($m, $use_raw_request, $trigger_error);
 
 
 ### Changelog
+v.0.9.1
+- Added support for AWS SES Configuration Sets and Message Tags
+- Added caching mechanism in `SimpleEmailServiceMessage` to speed up bulk sending mode
+
+v.0.9.0
+- Add parameter for raw message encoding
+
+v.0.8.9
+- Merge pull request 32 from hlev/remove-to-requirement
+
 v.0.8.8
 
 - Issues fixed: #24, #25, #30, #31

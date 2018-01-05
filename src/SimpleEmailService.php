@@ -46,7 +46,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.8.9
+* @version v0.9.1
 */
 class SimpleEmailService
 {
@@ -381,7 +381,13 @@ class SimpleEmailService
 		$action = !empty($sesMessage->attachments) || $use_raw_request ? 'SendRawEmail' : 'SendEmail';
 		$ses_request->setParameter('Action', $action);
 
+		// Works with both calls
+		if (!is_null($sesMessage->configuration_set)) {
+			$ses_request->setParameter('ConfigurationSetName', $sesMessage->configuration_set);
+		}
+
 		if($action == 'SendRawEmail') {
+			// https://docs.aws.amazon.com/ses/latest/APIReference/API_SendRawEmail.html
 			$ses_request->setParameter('RawMessage.Data', $sesMessage->getRawMessage());
 		} else {
 			$i = 1;
@@ -440,6 +446,13 @@ class SimpleEmailService
 				if($sesMessage->messageHtmlCharset != null && strlen($sesMessage->messageHtmlCharset) > 0) {
 					$ses_request->setParameter('Message.Body.Html.Charset', $sesMessage->messageHtmlCharset);
 				}
+			}
+
+			$i = 1;
+			foreach($sesMessage->message_tags as $key => $value) {
+				$ses_request->setParameter('Tags.member.'.$i.'.Name', $key);
+				$ses_request->setParameter('Tags.member.'.$i.'.Value', $value);
+				$i++;
 			}
 		}
 

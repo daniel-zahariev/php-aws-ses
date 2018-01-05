@@ -4,7 +4,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.8.9
+* @version v0.9.1
 */
 final class SimpleEmailServiceRequest
 {
