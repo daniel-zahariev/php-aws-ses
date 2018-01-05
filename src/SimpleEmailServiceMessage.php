@@ -313,9 +313,10 @@ final class SimpleEmailServiceMessage {
 	/**
 	 * Get the raw mail message
 	 *
+	 * @param bool $encode Should the raw message be base64 encoded or not
 	 * @return string
 	 */
-	public function getRawMessage()
+	public function getRawMessage($encode = true)
 	{
 		$boundary = uniqid(rand(), true);
 		$raw_message = count($this->customHeaders) > 0 ? join("\n", $this->customHeaders) . "\n" : '';
@@ -367,7 +368,7 @@ final class SimpleEmailServiceMessage {
 
 		$raw_message .= "\n--{$boundary}--\n";
 
-		return base64_encode($raw_message);
+		return $encode ? base64_encode($raw_message) : $raw_message;
 	}
 
 	/**
