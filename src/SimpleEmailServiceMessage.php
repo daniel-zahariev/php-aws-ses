@@ -13,7 +13,7 @@ final class SimpleEmailServiceMessage {
     public $to, $cc, $bcc, $replyto, $recipientsCharset;
     public $from, $returnpath;
     public $subject, $messagetext, $messagehtml;
-    public $subjectCharset, $messageTextCharset, $messageHtmlCharset;
+    public $subjectCharset, $messageTextCharset, $messageHtmlCharset, $attachmentCharset;
     public $attachments, $customHeaders, $configuration_set, $message_tags;
     public $is_clean, $raw_message;
 
@@ -34,6 +34,7 @@ final class SimpleEmailServiceMessage {
         $this->subjectCharset = 'UTF-8';
         $this->messageTextCharset = 'UTF-8';
         $this->messageHtmlCharset = 'UTF-8';
+        $this->attachmentCharset = 'UTF-8';
 
         $this->attachments = array();
         $this->customHeaders = array();
@@ -547,8 +548,8 @@ final class SimpleEmailServiceMessage {
 
         foreach ($this->attachments as $attachment) {
             $raw_message .= "\n--{$boundary}\n";
-            $raw_message .= 'Content-Type: ' . $attachment['mimeType'] . '; name="' . $attachment['name'] . '"' . "\n";
-            $raw_message .= 'Content-Disposition: ' . $attachment['attachmentType'] . "\n";
+            $raw_message .= 'Content-Type: ' . $attachment['mimeType'] . '; name="?' . $this->attachmentCharset . '?B?' . base64_encode($attachment['name']) . '?=";' . "\n"; //'application/pdf'
+            $raw_message .= 'Content-Disposition: ' . $attachment['attachmentType'] . '; filename="=?' . $this->attachmentCharset . '?B?' . base64_encode($attachment['name']) . "?=\";\n";
             if (!empty($attachment['contentId'])) {
                 $raw_message .= 'Content-ID: ' . $attachment['contentId'] . '' . "\n";
             }
