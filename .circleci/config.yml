@@ -14,7 +14,7 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/mysql:9.4
 
-    working_directory: ~/
+    working_directory: ~/repo
 
     steps:
       - checkout
@@ -34,4 +34,4 @@ jobs:
           key: v1-dependencies-{{ checksum "composer.json" }}
         
       # run tests!
-      - run: phpunit
+      - run: ./vendor/bin/phpunit
