@@ -1,28 +1,31 @@
-**Amazon Simple Email Service provides a simple way to send e-mails without having to maintain your own mail server.  Those PHP classes use the REST-based interface to that service.**
+**Amazon Simple Email Service provides a simple way to send e-mails without having to maintain your own mail server. Those PHP classes use the REST-based interface to that service.**
 
-****
+[![Build Status](https://travis-ci.org/daniel-zahariev/php-aws-ses.svg?branch=master)](https://travis-ci.org/daniel-zahariev/php-aws-ses)
+[![CircleCI](https://circleci.com/gh/daniel-zahariev/php-aws-ses/tree/master.svg?style=svg)](https://circleci.com/gh/daniel-zahariev/php-aws-ses/tree/master)
+
+---
 
 > This repository is a fork from version 0.8.2 of the [original classes](http://www.orderingdisorder.com/aws/ses/) developed by **Dan Myers**
 > Read the [old docs here](README_old.md)
 
-****
+---
 
 ## Table of Contents
 
-- [Installation](#installation)
-- [Basic Usage](#basic-usage)
-- [Recipients](#recipients)
-- [Message body](#message-body)
-- [Attachments](#attachments)
-- [Sending Bulk Messages](#sending-bulk-messages)
-- [API Endpoints](#api-endpoints)
-- [Helper Methods](#helper-methods)
-
+*   [Installation](#installation)
+*   [Basic Usage](#basic-usage)
+*   [Recipients](#recipients)
+*   [Message body](#message-body)
+*   [Attachments](#attachments)
+*   [Sending Bulk Messages](#sending-bulk-messages)
+*   [API Endpoints](#api-endpoints)
+*   [Helper Methods](#helper-methods)
 
 ### Installation
+
 Install the latest version with
 
-	composer require daniel-zahariev/php-aws-ses
+    composer require daniel-zahariev/php-aws-ses
 
 ### Basic Usage
 
@@ -45,7 +48,6 @@ print_r($ses->sendEmail($m));
 //     [MessageId] => 0000012dc5e4b4c0-b2c566ad-dcd0-4d23-bea5-f40da774033c-000000
 //     [RequestId] => 4953a96e-29d4-11e0-8907-21df9ed6ffe3
 //)
-
 ```
 
 ### Recipients
@@ -70,7 +72,6 @@ $m->addReplyTo(array('stanley@example.com', 'erin@example.com'));
 
 // Also add names to any of the Recipients lists
 $m->addTo('Jim Carrey <jim@example.com>');
-
 ```
 
 ### Message body
@@ -93,8 +94,8 @@ $m->setMessageFromURL($texturl, $htmlurl);
 // You can also set the encoding of the Subject and the Message Body
 $m->setSubjectCharset('ISO-8859-1');
 $m->setMessageCharset('ISO-8859-1');
-
 ```
+
 The default is UTF-8 if you do not specify a charset, which is usually the right setting. You can read more information in the [SES API documentation](http://docs.amazonwebservices.com/ses/latest/APIReference/API_Content.html)
 
 ### Attachments
@@ -113,10 +114,10 @@ $ses->sendEmail($m, $use_raw_request = true);
 // Now you can add an inline file in the message
 $m->addAttachmentFromFile('logo.png','path/to/logo.png','application/octet-stream', '<logo.png>' , 'inline');
 // and use it in the html version of the e-mail: <img src='cid:logo.png' />
-
 ```
 
 ### Configuration Set and Message Tags
+
 ```php
 <?php
 
@@ -144,11 +145,10 @@ $tags = $m->getMessageTags();
 
 // Remove all message tags
 $m->removeMessageTags();
-
 ```
 
-
 ### Sending Bulk Messages
+
 When hundreds of emails have to be sent in bulk it's best to use the Bulk mode which essentially reuses a CURL handler and reduces the number of SSL handshakes and this gives a better performance.
 
 ```php
@@ -167,6 +167,7 @@ $ses->setBulkMode(false);
 ```
 
 ### API Endpoints
+
 Few [Regions and Amazon SES endpoints](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/regions.html) are available and they can be used like this:
 
 ```php
@@ -192,11 +193,12 @@ $ses->verifyEmailAddress('user@example.com');
 $ses->getSendQuota();
 // Get Send Statistics
 $ses->getSendStatistics()
-
 ```
+
 See the documentation on [GetSendQuota](http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendQuota.html) and [GetSendStatistics](http://docs.amazonwebservices.com/ses/latest/APIReference/API_GetSendStatistics.html) for more information on these calls.
 
 ### Errors
+
 By default when Amazon SES API returns an error it will be triggered with [`trigger_error`](http://php.net/manual/en/function.trigger-error.php):
 
 ```php
@@ -210,70 +212,71 @@ $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigg
 $use_raw_request = false;
 $trigger_error = false;
 $ses->sendEmail($m, $use_raw_request, $trigger_error);
-
 ```
 
-
 ### Changelog
+
 v.0.9.1
-- Added support for AWS SES Configuration Sets and Message Tags
-- Added caching mechanism in `SimpleEmailServiceMessage` to speed up bulk sending mode
+
+*   Added support for AWS SES Configuration Sets and Message Tags
+*   Added caching mechanism in `SimpleEmailServiceMessage` to speed up bulk sending mode
 
 v.0.9.0
-- Add parameter for raw message encoding
+
+*   Add parameter for raw message encoding
 
 v.0.8.9
-- Merge pull request 32 from hlev/remove-to-requirement
+
+*   Merge pull request 32 from hlev/remove-to-requirement
 
 v.0.8.8
 
-- Issues fixed: #24, #25, #30, #31
-- added a method `setBulkMode` in `SimpleEmailService` which can enable reuse of `SimpleEmailServiceRequest` object for bulk sending of requests to AWS SES
-- new methods in `SimpleEmailService`: `getVerifyPeer`, `setVerifyPeer`, `getVerifyHost`, `setVerifyHost`, `getBulkMode`, `setBulkMode`, `getRequestHandler` (protected)
-- methods marked as deprecated in `SimpleEmailService`: `enableVerifyHost`, `enableVerifyPeer`, `verifyHost`, `verifyPeer`
-- new methods in `SimpleEmailServiceMessage`: `clearTo`, `clearCC`, `clearBCC`, `clearReplyTo`, `clearRecipients`
-- new methods in `SimpleEmailServiceRequest`: `setVerb`, `clearParameters`, `getCurlHandler` (protected)
-- updated `validate` method in `SimpleEmailServiceMessage`
-- added some phpDocumentor blocks
+*   Issues fixed: #24, #25, #30, #31
+*   added a method `setBulkMode` in `SimpleEmailService` which can enable reuse of `SimpleEmailServiceRequest` object for bulk sending of requests to AWS SES
+*   new methods in `SimpleEmailService`: `getVerifyPeer`, `setVerifyPeer`, `getVerifyHost`, `setVerifyHost`, `getBulkMode`, `setBulkMode`, `getRequestHandler` (protected)
+*   methods marked as deprecated in `SimpleEmailService`: `enableVerifyHost`, `enableVerifyPeer`, `verifyHost`, `verifyPeer`
+*   new methods in `SimpleEmailServiceMessage`: `clearTo`, `clearCC`, `clearBCC`, `clearReplyTo`, `clearRecipients`
+*   new methods in `SimpleEmailServiceRequest`: `setVerb`, `clearParameters`, `getCurlHandler` (protected)
+*   updated `validate` method in `SimpleEmailServiceMessage`
+*   added some phpDocumentor blocks
 
 v.0.8.7
 
-- Minor updates
+*   Minor updates
 
 v.0.8.6
 
-- Removed dummy code
-- Removed version from source files
+*   Removed dummy code
+*   Removed version from source files
 
 v.0.8.5
 
- - A few issues are fixed #9, #10, #10
- - Pull request for Adding an inline file is merged
- - Pull request for fixing a 'From: ' field error with Raw messages is merged
- - Composer file added and submited to Packagist.org
- - Triggering an error is now optional (on by default)
- - Added class constants in `SimpleEmailService` for easy selection of region API endpoint
+*   A few issues are fixed #9, #10, #10
+*   Pull request for Adding an inline file is merged
+*   Pull request for fixing a 'From: ' field error with Raw messages is merged
+*   Composer file added and submited to Packagist.org
+*   Triggering an error is now optional (on by default)
+*   Added class constants in `SimpleEmailService` for easy selection of region API endpoint
 
 v.0.8.4
 
- - Added method `addCustomHeader` to class `SimpleEmailServiceMessage` for adding custom headers when the `SendRawEmail` call is used (#7)
- - `SendRawEmail` method can be enforced with a new parameter of `sendEmail` function
- - Recipients are now base64 encoded by default when the format is `Name <Email>` (#3)
- - Most of the notices should be cleared now (#5)
-
+*   Added method `addCustomHeader` to class `SimpleEmailServiceMessage` for adding custom headers when the `SendRawEmail` call is used (#7)
+*   `SendRawEmail` method can be enforced with a new parameter of `sendEmail` function
+*   Recipients are now base64 encoded by default when the format is `Name <Email>` (#3)
+*   Most of the notices should be cleared now (#5)
 
 v.0.8.3
 
- - Made automatic use of `SendRawEmail` REST API call when there are attachments
+*   Made automatic use of `SendRawEmail` REST API call when there are attachments
 
 v.0.8.2.
 
- - Inital impport
+*   Inital impport
 
 ### Todo List
 
- - Fully document the class methods with phpdoc tags
- - Build documentation with phpDocumentor
- - Move examples to files
- - Make a [Composer](https://packagist.org/) package
- - Allow X-Headers usage
+*   Fully document the class methods with phpdoc tags
+*   Build documentation with phpDocumentor
+*   Move examples to files
+*   Make a [Composer](https://packagist.org/) package
+*   Allow X-Headers usage
