@@ -6,7 +6,7 @@
 * @package AmazonSimpleEmailService
 * @version v0.9.1
 */
-final class SimpleEmailServiceRequest
+class SimpleEmailServiceRequest
 {
 	private $ses, $verb, $parameters = array();
 
@@ -26,19 +26,34 @@ final class SimpleEmailServiceRequest
 	* @param string $verb HTTP verb
 	* @return void
 	*/
-	public function __construct($ses, $verb = 'GET') {
+	public function __construct(SimpleEmailService $ses = null, $verb = 'GET') {
 		$this->ses = $ses;
 		$this->verb = $verb;
 		$this->response = (object) array('body' => '', 'code' => 0, 'error' => false);
 	}
 
+
+	/**
+	* Set SES class
+	*
+	* @param SimpleEmailService $ses
+	* @return SimpleEmailServiceRequest $this
+	*/
+	public function setSES(SimpleEmailService $ses) {
+		$this->ses = $ses;
+
+		return $this;
+	}
+
 	/**
 	* Set HTTP method
 	*
+	* @param string $verb
 	* @return SimpleEmailServiceRequest $this
 	*/
 	public function setVerb($verb) {
 		$this->verb = $verb;
+
 		return $this;
 	}
 

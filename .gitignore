@@ -1,0 +1,4 @@
+.DS_Store
+vendor
+composer.lock
+coverage

@@ -57,28 +57,45 @@ class SimpleEmailService
 	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
 	const AWS_EU_WEST1 = 'email.eu-west-1.amazonaws.com';
 
-	// AWS SES Target host of region
+	/**
+	 * AWS SES Target host of region
+	 */
 	protected $__host;
 
-	// AWS SES Access key
+	/**
+	 * AWS SES Access key
+	 */
 	protected $__accessKey;
 
-	// AWS Secret key
+	/**
+	 * AWS Secret key
+	 */
 	protected $__secretKey;
 
-	// Enable/disable
+	/**
+	 * Enable/disable
+	 */
 	protected $__trigger_errors;
 
-	// Controls the reuse of CURL hander for sending a bulk of messages
+	/**
+	 * Controls the reuse of CURL hander for sending a bulk of messages
+	 * @deprecated
+	 */
 	protected $__bulk_sending_mode = false;
 
-	// Optionally reusable SimpleEmailServiceRequest instance
+	/**
+	 * Optionally reusable SimpleEmailServiceRequest instance
+	 */
 	protected $__ses_request = null;
 
-	// Controls CURLOPT_SSL_VERIFYHOST setting for SimpleEmailServiceRequest's curl handler
+	/**
+	 * Controls CURLOPT_SSL_VERIFYHOST setting for SimpleEmailServiceRequest's curl handler
+	 */
 	protected $__verifyHost = true;
 
-	// Controls CURLOPT_SSL_VERIFYPEER setting for SimpleEmailServiceRequest's curl handler
+	/**
+	 * Controls CURLOPT_SSL_VERIFYPEER setting for SimpleEmailServiceRequest's curl handler
+	 */
 	protected $__verifyPeer = true;
 
 	/**
@@ -112,51 +129,97 @@ class SimpleEmailService
 		return $this;
 	}
 
-	// DEPRECATED
-	public function enableVerifyHost($enable = true) { $this->__verifyHost = (bool)$enable; return $this; }
-	// DEPRECATED
-	public function enableVerifyPeer($enable = true) { $this->__verifyPeer = (bool)$enable; return $this; }
-	// DEPRECATED
-	public function verifyHost() { return $this->__verifyHost; }
-	// DEPRECATED
-	public function verifyPeer() { return $this->__verifyPeer; }
+	/**
+	 * Set AWS Host
+	 * @param string $host AWS Host
+	 */
+	public function setHost($host = self::AWS_US_EAST_1) {
+		$this->__host = $host;
+
+		return $this;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public function enableVerifyHost($enable = true) {
+		$this->__verifyHost = (bool)$enable;
+
+		return $this;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public function enableVerifyPeer($enable = true) {
+		$this->__verifyPeer = (bool)$enable;
+
+		return $this;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public function verifyHost() {
+		return $this->__verifyHost;
+	}
+
+	/**
+	 * @deprecated
+	 */
+	public function verifyPeer() {
+		return $this->__verifyPeer;
+	}
 
 
 	/**
 	* Get AWS target host
 	* @return boolean
 	*/
-	public function getHost() { return $this->__host; }
+	public function getHost() {
+		return $this->__host;
+	}
 
 	/**
 	* Get AWS SES auth access key
 	* @return string
 	*/
-	public function getAccessKey() { return $this->__accessKey; }
+	public function getAccessKey() {
+		return $this->__accessKey;
+	}
 
 	/**
 	* Get AWS SES auth secret key
 	* @return string
 	*/
-	public function getSecretKey() { return $this->__secretKey; }
+	public function getSecretKey() {
+		return $this->__secretKey;
+	}
 
 	/**
 	* Get the verify peer CURL mode
 	* @return boolean
 	*/
-	public function getVerifyPeer() { return $this->__verifyPeer; }
+	public function getVerifyPeer() {
+		return $this->__verifyPeer;
+	}
 
 	/**
 	* Get the verify host CURL mode
 	* @return boolean
 	*/
-	public function getVerifyHost() { return $this->__verifyHost; }
+	public function getVerifyHost() {
+		return $this->__verifyHost;
+	}
 
 	/**
 	* Get bulk email sending mode
+	* @deprecated
 	* @return boolean
 	*/
-	public function getBulkMode() { return $this->__bulk_sending_mode; }
+	public function getBulkMode() {
+		return $this->__bulk_sending_mode;
+	}
 
 
 	/**
@@ -192,11 +255,10 @@ class SimpleEmailService
 	*
 	* @param boolean $enable New status for the mode
 	* @return SimpleEmailService $this
+	* @deprecated
 	*/
 	public function setBulkMode($enable = true) {
 		$this->__bulk_sending_mode = (bool)$enable;
-		// clear request handler on disable
-		if (!$enable) $this->__ses_request = null;
 		return $this;
 	}
 
@@ -508,14 +570,33 @@ class SimpleEmailService
 	}
 
 	/**
-	*
-	*/
-	protected function getRequestHandler($verb) {
-		if ($this->__bulk_sending_mode && !empty($this->__ses_request)) {
-			$this->__ses_request->setVerb($verb);
-			return $this->__ses_request;
+	 * Set SES Request
+	 * 
+	 * @param SimpleEmailServiceRequest $ses_request description
+	 * @return SimpleEmailService $this
+	 */
+	public function setRequestHandler(SimpleEmailServiceRequest $ses_request = null) {
+		if (!is_null($ses_request)) {
+			$ses_request->setSES($this);
 		}
-		$this->__ses_request = new SimpleEmailServiceRequest($this, $verb);
+
+		$this->__ses_request = $ses_request;
+
+		return $this;
+	}
+
+	/**
+	 * Get SES Request
+	 * 
+	 * @param string $verb HTTP Verb: GET, POST, DELETE
+	 * @return SimpleEmailServiceRequest SES Request
+	 */
+	public function getRequestHandler($verb) {
+		if (empty($this->__ses_request)) {
+			$this->__ses_request = new SimpleEmailServiceRequest($this, $verb);
+		} else {
+			$this->__ses_request->setVerb($verb);
+		}
 
 		return $this->__ses_request;
 	}
