@@ -4,7 +4,7 @@
     "keywords": ["amazon", "email","aws","ses", "api", "rest"],
     "homepage": "https://github.com/daniel-zahariev/php-aws-ses",
     "type": "library",
-    "license": "MIT License",
+    "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "authors": [
