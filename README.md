@@ -281,6 +281,36 @@ v.0.8.2.
 *   Make a [Composer](https://packagist.org/) package
 *   Allow X-Headers usage
 
+## Contributors
+
+### Code Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/daniel-zahariev/php-aws-ses/graphs/contributors"><img src="https://opencollective.com/php-aws-ses/contributors.svg?width=890&button=false" /></a>
+
+### Financial Contributors
+
+Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/php-aws-ses/contribute)]
+
+#### Individuals
+
+<a href="https://opencollective.com/php-aws-ses"><img src="https://opencollective.com/php-aws-ses/individuals.svg?width=890"></a>
+
+#### Organizations
+
+Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/php-aws-ses/contribute)]
+
+<a href="https://opencollective.com/php-aws-ses/organization/0/website"><img src="https://opencollective.com/php-aws-ses/organization/0/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/1/website"><img src="https://opencollective.com/php-aws-ses/organization/1/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/2/website"><img src="https://opencollective.com/php-aws-ses/organization/2/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/3/website"><img src="https://opencollective.com/php-aws-ses/organization/3/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/4/website"><img src="https://opencollective.com/php-aws-ses/organization/4/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/5/website"><img src="https://opencollective.com/php-aws-ses/organization/5/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/6/website"><img src="https://opencollective.com/php-aws-ses/organization/6/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/7/website"><img src="https://opencollective.com/php-aws-ses/organization/7/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/8/website"><img src="https://opencollective.com/php-aws-ses/organization/8/avatar.svg"></a>
+<a href="https://opencollective.com/php-aws-ses/organization/9/website"><img src="https://opencollective.com/php-aws-ses/organization/9/avatar.svg"></a>
+
 ### License
 
 MIT License
