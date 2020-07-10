@@ -214,7 +214,24 @@ $trigger_error = false;
 $ses->sendEmail($m, $use_raw_request, $trigger_error);
 ```
 
+### Request Signature Version
+
+You can configure which version of the request signature should be used. [Version 4](https://docs.aws.amazon.com/general/latest/gr/sigv4_signing.html) is now supported but not used by default.
+
+```php
+<?php
+
+$signature_version = SimpleEmailService::REQUEST_SIGNATURE_V4;
+$ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigger_error, $signature_version);
+```
+
+
+
 ### Changelog
+
+v.0.9.2
+
+*   Added support for AWS Signature Version 4
 
 v.0.9.1
 
