@@ -57,6 +57,9 @@ class SimpleEmailService
 	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
 	const AWS_EU_WEST1 = 'email.eu-west-1.amazonaws.com';
 
+	const REQUEST_SIGNATURE_V3 = 'v3';
+	const REQUEST_SIGNATURE_V4 = 'v4';
+
 	/**
 	 * AWS SES Target host of region
 	 */
@@ -98,22 +101,47 @@ class SimpleEmailService
 	 */
 	protected $__verifyPeer = true;
 
-	/**
-	* Constructor
-	*
-	* @param string $accessKey Access key
-	* @param string $secretKey Secret key
-	* @param string $host Amazon Host through which to send the emails
-	* @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
-	* @return void
-	*/
-	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true) {
+    /**
+     * @var string HTTP Request signature version
+     */
+	protected $__requestSignatureVersion;
+
+    /**
+     * Constructor
+     *
+     * @param string $accessKey Access key
+     * @param string $secretKey Secret key
+     * @param string $host Amazon Host through which to send the emails
+     * @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
+     * @param string $requestSignatureVersion Version of the request signature
+     */
+	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $requestSignatureVersion = self::REQUEST_SIGNATURE_V3) {
 		if ($accessKey !== null && $secretKey !== null) {
 			$this->setAuth($accessKey, $secretKey);
 		}
 		$this->__host = $host;
 		$this->__trigger_errors = $trigger_errors;
+		$this->__requestSignatureVersion = $requestSignatureVersion;
 	}
+
+    /**
+     * Set the request signature version
+     *
+     * @param string $requestSignatureVersion
+     * @return SimpleEmailService $this
+     */
+	public function setRequestSignatureVersion($requestSignatureVersion) {
+	    $this->__requestSignatureVersion = $requestSignatureVersion;
+
+	    return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRequestSignatureVersion() {
+	    return $this->__requestSignatureVersion;
+    }
 
 	/**
 	* Set AWS access key and secret key
@@ -571,7 +599,7 @@ class SimpleEmailService
 
 	/**
 	 * Set SES Request
-	 * 
+	 *
 	 * @param SimpleEmailServiceRequest $ses_request description
 	 * @return SimpleEmailService $this
 	 */
@@ -587,7 +615,7 @@ class SimpleEmailService
 
 	/**
 	 * Get SES Request
-	 * 
+	 *
 	 * @param string $verb HTTP Verb: GET, POST, DELETE
 	 * @return SimpleEmailServiceRequest SES Request
 	 */
