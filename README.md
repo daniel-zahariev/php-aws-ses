@@ -35,8 +35,8 @@ Install the latest version with
 require_once 'vendor/autoload.php';
 
 $m = new SimpleEmailServiceMessage();
-$m->addTo('recipient@example.com');
-$m->setFrom('user@example.com');
+$m->addTo('Recipient Name <recipient@example.com>');
+$m->setFrom('Sender <user@example.com>');
 $m->setSubject('Hello, world!');
 $m->setMessageFromString('This is the message body.');
 
