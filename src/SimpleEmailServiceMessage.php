@@ -63,6 +63,17 @@ final class SimpleEmailServiceMessage {
 
         return $this;
     }
+    
+    /**
+     * @return SimpleEmailServiceMessage $this
+     */
+    public function setTo($to) {
+        $this->to = (array) $to;
+            
+        $this->is_clean = false;
+        
+        return $this;
+    }
 
     /**
      * Clear the To: email address(es) for the message
