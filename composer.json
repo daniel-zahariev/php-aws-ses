@@ -1,5 +1,5 @@
 {
-    "name": "daniel-zahariev/php-aws-ses",
+    "name": "vincentnikkelen/php-aws-ses",
     "description": "Send emails via Amazon Simple Email Service (SES) with REST-like interface",
     "keywords": ["amazon", "email","aws","ses", "api", "rest"],
     "homepage": "https://github.com/daniel-zahariev/php-aws-ses",
