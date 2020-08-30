@@ -1,7 +1,0 @@
-cleanup.format.on.save=false
-cleanup.organize.on.save=false
-cleanup.remove_trailing_whitespaces=false
-cleanup.remove_trailing_whitespaces_all=true
-cleanup.remove_trailing_whitespaces_ignore_empty=false
-eclipse.preferences.version=1
-org.eclipse.php.ui.text.custom_code_templates=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?><templates/>
