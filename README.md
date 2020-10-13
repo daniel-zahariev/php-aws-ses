@@ -229,6 +229,11 @@ $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigg
 
 ### Changelog
 
+v.0.9.3
+
+*   AWS Signature Version 4 is the default one (thanks to [VincentNikkelen](https://github.com/VincentNikkelen))
+*   Added support for more regions (thanks to [VincentNikkelen](https://github.com/VincentNikkelen))  
+
 v.0.9.2
 
 *   Added support for AWS Signature Version 4
