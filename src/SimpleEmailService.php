@@ -57,7 +57,7 @@ class SimpleEmailService
 	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
 	const AWS_EU_WEST1 = 'email.eu-west-1.amazonaws.com';
 
-	const REQUEST_SIGNATURE_V3 = 'v3';
+	const REQUEST_SIGNATURE_V3 = 'v4';  // For BW compatibility reasons.
 	const REQUEST_SIGNATURE_V4 = 'v4';
 
 	/**
@@ -114,8 +114,9 @@ class SimpleEmailService
      * @param string $host Amazon Host through which to send the emails
      * @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
      * @param string $requestSignatureVersion Version of the request signature
+     *               Currently only V4 supported by AWS. Keeping parameter for BW compatibility reasons.
      */
-	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $requestSignatureVersion = self::REQUEST_SIGNATURE_V3) {
+	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $requestSignatureVersion = self::REQUEST_SIGNATURE_V4) {
 		if ($accessKey !== null && $secretKey !== null) {
 			$this->setAuth($accessKey, $secretKey);
 		}
@@ -127,17 +128,21 @@ class SimpleEmailService
     /**
      * Set the request signature version
      *
-     * @param string $requestSignatureVersion
+     * @param string $requestSignatureVersion Value is ignored and V4 is used. This for BW compatibility.
      * @return SimpleEmailService $this
+     * 
+     * @deprecated Currently only V4 supported.
      */
 	public function setRequestSignatureVersion($requestSignatureVersion) {
-	    $this->__requestSignatureVersion = $requestSignatureVersion;
+	    $this->__requestSignatureVersion = self::REQUEST_SIGNATURE_V4;
 
 	    return $this;
     }
 
     /**
      * @return string
+     * 
+     * @deprecated Not relevant when only V4 is supported.
      */
     public function getRequestSignatureVersion() {
 	    return $this->__requestSignatureVersion;
