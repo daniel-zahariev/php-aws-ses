@@ -216,7 +216,7 @@ $ses->sendEmail($m, $use_raw_request, $trigger_error);
 
 ### Request Signature Version
 
-You can configure which version of the request signature should be used. [Version 4](https://docs.aws.amazon.com/general/latest/gr/sigv4_signing.html) is now supported but not used by default.
+You can configure which version of the request signature should be used. [Version 4](https://docs.aws.amazon.com/general/latest/gr/sigv4_signing.html) is now supported and used by default.
 
 ```php
 <?php
