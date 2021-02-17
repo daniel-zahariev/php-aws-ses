@@ -46,7 +46,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.9.1
+* @version v0.9.4
 */
 class SimpleEmailService
 {
@@ -67,7 +67,7 @@ class SimpleEmailService
 	const AWS_US_EAST_2 = 'email.us-east-2.amazonaws.com';
 	const AWS_US_GOV_WEST_1 = 'email.us-gov-west-1.amazonaws.com';
 	const AWS_US_WEST_2 = 'email.us-west-2.amazonaws.com';
-	
+
 	/**
 	 * Deprecated, available for backward compatibility
 	 */
@@ -146,7 +146,7 @@ class SimpleEmailService
      *
      * @param string $requestSignatureVersion Value is ignored and V4 is used. This for BW compatibility.
      * @return SimpleEmailService $this
-     * 
+     *
      * @deprecated Currently only V4 supported.
      */
 	public function setRequestSignatureVersion($requestSignatureVersion) {
@@ -157,7 +157,7 @@ class SimpleEmailService
 
     /**
      * @return string
-     * 
+     *
      * @deprecated Not relevant when only V4 is supported.
      */
     public function getRequestSignatureVersion() {

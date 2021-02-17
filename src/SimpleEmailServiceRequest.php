@@ -4,7 +4,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.9.1
+* @version v0.9.4
 */
 class SimpleEmailServiceRequest
 {
@@ -253,7 +253,7 @@ class SimpleEmailServiceRequest
 	* @param string $data Data
 	* @return integer
 	*/
-	private function __responseWriteCallback(&$curl, &$data) {
+	private function __responseWriteCallback($curl, $data) {
 		if (!isset($this->response->body)) {
 			$this->response->body = $data;
 		} else {

@@ -229,6 +229,9 @@ $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigg
 
 ### Changelog
 
+v.0.9.4
+*   Fix for PHP8 errors (#81)
+
 v.0.9.3
 
 *   AWS Signature Version 4 is the default one (thanks to [VincentNikkelen](https://github.com/VincentNikkelen))

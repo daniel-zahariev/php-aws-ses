@@ -4,7 +4,7 @@
  *
  * @link https://github.com/daniel-zahariev/php-aws-ses
  * @package AmazonSimpleEmailService
- * @version v0.9.1
+ * @version v0.9.4
  */
 final class SimpleEmailServiceMessage {
 
@@ -63,15 +63,15 @@ final class SimpleEmailServiceMessage {
 
         return $this;
     }
-    
+
     /**
      * @return SimpleEmailServiceMessage $this
      */
     public function setTo($to) {
         $this->to = (array) $to;
-            
+
         $this->is_clean = false;
-        
+
         return $this;
     }
 
