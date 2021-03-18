@@ -78,29 +78,6 @@ class SimpleEmailServiceRequest
 	}
 
 	/**
-	* Get the params for the request
-	*
-	* @return array $params
-	*/
-	public function getParametersEncoded() {
-		$params = array();
-
-		foreach ($this->parameters as $var => $value) {
-			if(is_array($value)) {
-				foreach($value as $v) {
-					$params[] = $var.'='.$this->__customUrlEncode($v);
-				}
-			} else {
-				$params[] = $var.'='.$this->__customUrlEncode($value);
-			}
-		}
-
-		sort($params, SORT_STRING);
-
-		return $params;
-	}
-
-	/**
 	* Clear the request parameters
 	* @return SimpleEmailServiceRequest $this
 	*/
@@ -146,7 +123,7 @@ class SimpleEmailServiceRequest
 	public function getResponse() {
 
         $url = 'https://'.$this->ses->getHost().'/';
-        $query = implode('&', $this->getParametersEncoded());
+        $query = http_build_query($this->parameters, '', '&', PHP_QUERY_RFC3986);
         $headers = $this->getHeaders($query);
 
 		$curl_handler = $this->getCurlHandler();
@@ -261,19 +238,6 @@ class SimpleEmailServiceRequest
 		}
 
 		return strlen($data);
-	}
-
-	/**
-	* Contributed by afx114
-	* URL encode the parameters as per http://docs.amazonwebservices.com/AWSECommerceService/latest/DG/index.html?Query_QueryAuth.html
-	* PHP's rawurlencode() follows RFC 1738, not RFC 3986 as required by Amazon. The only difference is the tilde (~), so convert it back after rawurlencode
-	* See: http://www.morganney.com/blog/API/AWS-Product-Advertising-API-Requires-a-Signed-Request.php
-	*
-	* @param string $var String to encode
-	* @return string
-	*/
-	private function __customUrlEncode($var) {
-		return str_replace('%7E', '~', rawurlencode($var));
 	}
 
 	/**
