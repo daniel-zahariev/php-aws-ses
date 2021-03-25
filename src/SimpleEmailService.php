@@ -46,7 +46,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.9.4
+* @version v0.9.5
 */
 class SimpleEmailService
 {
@@ -150,7 +150,7 @@ class SimpleEmailService
      * @deprecated Currently only V4 supported.
      */
 	public function setRequestSignatureVersion($requestSignatureVersion) {
-	    $this->__requestSignatureVersion = self::REQUEST_SIGNATURE_V4;
+	    $this->__requestSignatureVersion = $requestSignatureVersion;
 
 	    return $this;
     }

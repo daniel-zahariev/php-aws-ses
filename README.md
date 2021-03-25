@@ -229,6 +229,9 @@ $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigg
 
 ### Changelog
 
+v.0.9.5
+*   Fix for arrays in request query params (#83) 
+
 v.0.9.4
 *   Fix for PHP8 errors (#81)
 

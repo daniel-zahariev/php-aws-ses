@@ -4,7 +4,7 @@
 *
 * @link https://github.com/daniel-zahariev/php-aws-ses
 * @package AmazonSimpleEmailService
-* @version v0.9.4
+* @version v0.9.5
 */
 class SimpleEmailServiceRequest
 {
@@ -81,6 +81,7 @@ class SimpleEmailServiceRequest
 	* Get the params for the request
 	*
 	* @return array $params
+	* @deprecated
 	*/
 	public function getParametersEncoded() {
 		$params = array();
@@ -146,7 +147,8 @@ class SimpleEmailServiceRequest
 	public function getResponse() {
 
         $url = 'https://'.$this->ses->getHost().'/';
-        $query = implode('&', $this->getParametersEncoded());
+        ksort($this->parameters);
+        $query = http_build_query($this->parameters, '', '&', PHP_QUERY_RFC1738);
         $headers = $this->getHeaders($query);
 
 		$curl_handler = $this->getCurlHandler();
@@ -271,6 +273,7 @@ class SimpleEmailServiceRequest
 	*
 	* @param string $var String to encode
 	* @return string
+	* @deprecated
 	*/
 	private function __customUrlEncode($var) {
 		return str_replace('%7E', '~', rawurlencode($var));
