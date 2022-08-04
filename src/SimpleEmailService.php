@@ -597,7 +597,7 @@ class SimpleEmailService
 	* @return array The request id for this request.
 	*/
 	public function deleteVerifiedEmailAddress($email) {
-		$this->__triggerError('deleteVerifiedEmailAddress', array('message' => 'Use the deleteIdentity operation to verify a new email address.', 'depracted' => true));
+		$this->__triggerError('deleteVerifiedEmailAddress', array('message' => 'Use the deleteIdentity operation to delete email addresses.', 'depracted' => true));
 		$ses_request = $this->getRequestHandler('DELETE');
 		$ses_request->setParameter('Action', 'DeleteVerifiedEmailAddress');
 		$ses_request->setParameter('EmailAddress', $email);
