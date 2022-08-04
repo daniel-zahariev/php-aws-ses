@@ -310,9 +310,51 @@ class SimpleEmailService
 		$this->__bulk_sending_mode = (bool)$enable;
 		return $this;
 	}
+	
+	/**
+	* Lists all available configurationsets
+	*
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_ListConfigurationSets.html
+	*
+	* @param int $maxItems Number of configurationsets; max 1000 per request
+	* @param string $nextToken The token for the next request 
+	* @return array An array containing three items: a list of configurationsets, the nextid and the request id.
+	*/
+	public function listConfigurationSets(?$maxItems, ?$nextToken) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'ListConfigurationSets');
+		$ses_request->setParameter('MaxItems', $maxItems);
+		$ses_request->setParameter('NextToken', $nextToken);
 
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('listConfigurationSets', $ses_response->error);
+			return false;
+		}
+
+		$response = array();
+		if(!isset($ses_response->body)) {
+			return $response;
+		}
+
+		$addresses = array();
+		foreach($ses_response->body->ListConfigurationSetsResult->ConfigurationSets->member as $configurationSet) {
+			$configurationSets[] = (string)$configurationSets;
+		}
+
+		$response['ConfigurationSets'] = $configurationSets;
+		$response['NextToken'] = (string)$ses_response->body->ListConfigurationSetsResult->NextToken;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+
+		return $response;
+	}
+	
 	/**
 	* Lists the email addresses that have been verified and can be used as the 'From' address
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_ListVerifiedEmailAddresses.html
 	*
 	* @return array An array containing two items: a list of verified email addresses, and the request id.
 	*/
@@ -344,18 +386,133 @@ class SimpleEmailService
 
 		return $response;
 	}
+	
+	/*
+	* Enables or disables Easy DKIM signing of email sent from an identity. 
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_SetIdentityDkimEnabled.html
+	*
+	* @param bool $dkimEnabled Sets whether DKIM signing is enabled for an identity. Set to true to enable DKIM signing for this identity; false to disable it.
+	* @param string $identity The identity for which DKIM signing should be enabled or disabled.
+	* @return array The request id for this request.
+	*/
+	public function setIdentityDkimEnabled(bool $dkimEnabled, string $identity) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'SetIdentityDkimEnabled');
+		$ses_request->setParameter('DkimEnabled', $dkimEnabled);
+		$ses_request->setParameter('Identity', $identity;
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('setIdentityDkimEnabled', $ses_response->error);
+			return false;
+		}
+
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		return $response;
+	}
+	
+	/**
+	* Try to verify dkim from the given domain
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_VerifyDomainDkim.html
+	*
+	* @return array An array containing two items: a list the domain dkim tokens and the request id.
+	*/
+	public function verifyDomainDkim($domain) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'VerifyDomainDkim');
+		$ses_request->setParameter('Domain', $domain);
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('verifyDomainDkim', $ses_response->error);
+			return false;
+		}
+
+		$response = array();
+		if(!isset($ses_response->body)) {
+			return $response;
+		}
+
+		$addresses = array();
+		foreach($ses_response->body->VerifyDomainDkimResult->DkimTokens->member as $token) {
+			$tokens[] = (string)$token;
+		}
+
+		$response['DkimTokens'] = $token;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+
+		return $response;
+	}
+	
+	/*
+	* Enables or disables email sending across your entire Amazon SES account in the current AWS Region.
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_UpdateAccountSendingEnabled.html
+	*
+	* @param bool $enabled Describes whether email sending is enabled or disabled.
+	* @return array The request id for this request.
+	*/
+	public function updateAccountSendingEnabled(bool $enabled) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'UpdateAccountSendingEnabled');
+		$ses_request->setParameter('Enabled', $enabled);
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('updateAccountSendingEnabled', $ses_response->error);
+			return false;
+		}
+
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		return $response;
+	}
+					   
+	/*
+	* Returns the email sending status of the Amazon SES account.
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_GetAccountSendingEnabled.html
+	*
+	* @return array The request id for this request.
+	*/
+	public function getAccountSendingEnabled() {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'GetAccountSendingEnabled');
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('getAccountSendingEnabled', $ses_response->error);
+			return false;
+		}
+
+		$response['Enabled'] = (bool)$ses_response->body->GetAccountSendingEnabledResult->Enabled;
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		return $response;
+	}
 
 	/**
+	* DEPRACTED
 	* Requests verification of the provided email address, so it can be used
 	* as the 'From' address when sending emails through SimpleEmailService.
 	*
 	* After submitting this request, you should receive a verification email
 	* from Amazon at the specified address containing instructions to follow.
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_VerifyEmailAddress.html
 	*
 	* @param string $email The email address to get verified
 	* @return array The request id for this request.
 	*/
 	public function verifyEmailAddress($email) {
+		$this->__triggerError('verifyEmailAddress', array('message' => 'Use the verifyEmailIdentity operation to verify a new email address.', 'depracted' => true));
 		$ses_request = $this->getRequestHandler('POST');
 		$ses_request->setParameter('Action', 'VerifyEmailAddress');
 		$ses_request->setParameter('EmailAddress', $email);
@@ -372,14 +529,75 @@ class SimpleEmailService
 		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
 		return $response;
 	}
+	
+	/**
+	* Requests verification of the provided email address, so it can be used
+	* as the 'From' address when sending emails through SimpleEmailService.
+	*
+	* After submitting this request, you should receive a verification email
+	* from Amazon at the specified address containing instructions to follow.
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_VerifyEmailIdentity.html
+	*
+	* @param string $email The email address to get verified
+	* @return array The request id for this request.
+	*/
+	public function verifyEmailIdentity(string $email) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'VerifyEmailIdentity');
+		$ses_request->setParameter('EmailAddress', $email);
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('verifyEmailIdentity', $ses_response->error);
+			return false;
+		}
+
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		return $response;
+	}
+	
+	/**
+	* Requests verification of the provided domain, so all email addresses can used
+	* as the 'From' address when sending emails through SimpleEmailService.
+	*
+	* After submitting this request, you should verify the domain with by set a dns record.
+	* More information about domain varification are here: https://docs.aws.amazon.com/ses/latest/dg/verify-addresses-and-domains.html
+	* See: https://docs.aws.amazon.com/ses/latest/APIReference/API_VerifyDomainIdentity.html
+	*
+	* @param string $domain The domain to get verified
+	* @return array The request id for this request and the domain verification token.
+	*/
+	public function verifyDomainIdentity(string $domain) {
+		$ses_request = $this->getRequestHandler('POST');
+		$ses_request->setParameter('Action', 'VerifyDomainIdentity');
+		$ses_request->setParameter('Domain', $domain);
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('domainIdentity', $ses_response->error);
+			return false;
+		}
+
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		$response['VerificationToken'] = (string)$ses_response->body->VerifyDomainIdentityResult->VerificationToken;
+		return $response;
+	}
 
 	/**
+	* DEPRACTED
 	* Removes the specified email address from the list of verified addresses.
 	*
 	* @param string $email The email address to remove
 	* @return array The request id for this request.
 	*/
 	public function deleteVerifiedEmailAddress($email) {
+		$this->__triggerError('deleteVerifiedEmailAddress', array('message' => 'Use the deleteIdentity operation to verify a new email address.', 'depracted' => true));
 		$ses_request = $this->getRequestHandler('DELETE');
 		$ses_request->setParameter('Action', 'DeleteVerifiedEmailAddress');
 		$ses_request->setParameter('EmailAddress', $email);
@@ -390,6 +608,31 @@ class SimpleEmailService
 		}
 		if($ses_response->error !== false) {
 			$this->__triggerError('deleteVerifiedEmailAddress', $ses_response->error);
+			return false;
+		}
+
+		$response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+		return $response;
+	}
+	
+	/**
+	* Deletes the specified identity (an email address or a domain) from the list of verified identities.
+	* See https://docs.aws.amazon.com/ses/latest/APIReference/API_DeleteIdentity.html
+	*
+	* @param string $identity The identity to remove
+	* @return array The request id for this request.
+	*/
+	public function deleteIdentity(string $identity) {
+		$ses_request = $this->getRequestHandler('DELETE');
+		$ses_request->setParameter('Action', 'DeleteIdentity');
+		$ses_request->setParameter('Identity', $identity);
+
+		$ses_response = $ses_request->getResponse();
+		if($ses_response->error === false && $ses_response->code !== 200) {
+			$ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+		}
+		if($ses_response->error !== false) {
+			$this->__triggerError('deleteIdentity', $ses_response->error);
 			return false;
 		}
 
@@ -602,6 +845,10 @@ class SimpleEmailService
 	{
 		if($error == false) {
 			trigger_error(sprintf("SimpleEmailService::%s(): Encountered an error, but no description given", $functionname), E_USER_WARNING);
+		}
+		else if(isset($error['depracted']))
+		{
+			trigger_error(sprintf("SimpleEmailService::%s(): %s", $functionname, $error['message']), E_USER_DEPRECATED);
 		}
 		else if(isset($error['curl']) && $error['curl'])
 		{
