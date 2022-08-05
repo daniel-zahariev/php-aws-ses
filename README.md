@@ -116,7 +116,7 @@ $m->addAttachmentFromFile('logo.png','path/to/logo.png','application/octet-strea
 // and use it in the html version of the e-mail: <img src='cid:logo.png' />
 ```
 
-### Configuration Set and Message Tags
+### Configuration Set, Message Tags, DKIM and Account sending status
 
 ```php
 <?php
@@ -126,6 +126,9 @@ $m->setConfigurationSet('myConfigurationSet');
 
 // Reset the configuration set
 $m->setConfigurationSet(null);
+
+// List all created configuration sets
+$m->listConfigurationSets($maxItems);
 
 
 // Set message tag
@@ -145,6 +148,24 @@ $tags = $m->getMessageTags();
 
 // Remove all message tags
 $m->removeMessageTags();
+
+// Enables DKIM for domain example.com or email mail@example.com
+$m->setIdentityDkimEnabled(true, 'example.com');
+$m->setIdentityDkimEnabled(true, 'mail@example.com');
+
+// Disables DKIM for domain example.com or email mail@example.com
+$m->setIdentityDkimEnabled(false, 'example.com');
+$m->setIdentityDkimEnabled(false, 'mail@example.com');
+
+// Verify DKIM Tokens for given domain and return tokens
+$m->verifyDomainDkim('example.com');
+
+// Update sending status for global AWS account
+$m->updateAccountSendingEnabled(true); // enabled
+$m->updateAccountSendingEnabled(false); // disabled
+
+// get current sending status for global AWS account
+$m->getAccountSendingEnabled();
 ```
 
 ### Sending Bulk Messages
@@ -184,10 +205,18 @@ $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint);
 
 // Get the addresses that have been verified in your AWS SES account
 $ses->listVerifiedEmailAddresses();
-// Delete a verified address
-$ses->deleteVerifiedEmailAddress('user@example.com');
+
+// Delete a verified email address
+$ses->deleteIdentity('user@example.com');
+
+// Delete a verified domain
+$ses->deleteIdentity('example.com');
+
 // Send a confirmation email in order to verify a new email
-$ses->verifyEmailAddress('user@example.com');
+$ses->verifyEmailIdentity('user@example.com');
+
+// Set domain as verified identitiy (note: You must set dns records)
+$ses->verifyDomainIdentity('example.com');
 
 // Get Send Quota
 $ses->getSendQuota();
@@ -225,7 +254,19 @@ $signature_version = SimpleEmailService::REQUEST_SIGNATURE_V4;
 $ses = new SimpleEmailService('AccessKey', 'SecretKey', $region_endpoint, $trigger_error, $signature_version);
 ```
 
+### Depracted functions
+AWS depracts some function if the logic will be renewed. The following functions are marked as depracted all will be removed in a future version. Currently the functions will work but creates a "DEPRACTED" notice in the php.
 
+```php
+<?php
+// Verify a new email address
+// "SimpleEmailService::verifyEmailAddress(): Use the SimpleEmailService::verifyEmailIdentity() operation to verify a new email address."
+$ses->verifyEmailAddress('user@example.com');
+
+// Delete a verified email address.
+// "SimpleEmailService::deleteVerifiedEmailAddress(): Use the SimpleEmailService::deleteIdentity() operation to delete a verified email address."
+$ses->deleteVerifiedEmailAddress('user@example.com');
+```
 
 ### Changelog
 
