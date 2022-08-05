@@ -600,6 +600,11 @@ class SimpleEmailService
 	*/
 	public function __triggerError($functionname, $error)
 	{
+		if(!$this->__trigger_errors)
+		{
+			return;	
+		}
+		
 		if($error == false) {
 			trigger_error(sprintf("SimpleEmailService::%s(): Encountered an error, but no description given", $functionname), E_USER_WARNING);
 		}
