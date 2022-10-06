@@ -533,7 +533,11 @@ final class SimpleEmailServiceMessage {
         }
 
         if ($this->subject != null && strlen($this->subject) > 0) {
-            $raw_message .= 'Subject: =?' . $this->subjectCharset . '?B?' . base64_encode($this->subject) . "?=\n";
+            if (preg_match('/[^\x20-\x7f]/', $this->subject)) {
+                $raw_message .= 'Subject: =?' . $this->subjectCharset . '?B?' . base64_encode($this->subject) . "?=\n";
+            } else {
+                $raw_message .= 'Subject: ' . $this->subject . "\n";
+            }
         }
 
         $raw_message .= 'MIME-Version: 1.0' . "\n";
@@ -589,7 +593,9 @@ final class SimpleEmailServiceMessage {
         }
 
         if (preg_match("/(.*)<(.*)>/", $recipient, $regs)) {
-            $recipient = '=?' . $this->recipientsCharset . '?B?' . base64_encode($regs[1]) . '?= <' . $regs[2] . '>';
+            if (preg_match('/[^\x20-\x7f]/', $regs[1])) {
+                $recipient = '=?' . $this->recipientsCharset . '?B?' . base64_encode($regs[1]) . '?= <' . $regs[2] . '>';
+            }
         }
 
         return $recipient;
